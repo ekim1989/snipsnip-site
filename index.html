@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnipSnip — Never lose what you find online</title>
+  <meta name="description" content="Capture anything on the web. Build your visual knowledge base. SnipSnip is a free AI-powered Chrome extension for saving, organizing, and sharing what matters.">
+  <meta property="og:title" content="SnipSnip — Never lose what you find online">
+  <meta property="og:description" content="AI-powered screenshot capture, share, and organize. Free Chrome extension.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://snipsnip.ai">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #09090b; color: #e4e4e7; min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .glow {
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(255,77,77,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 80px 24px 40px; text-align: center;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 100px;
+      background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.15);
+      font-size: 13px; color: #ff4d4d; font-weight: 500;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease-out both;
+    }
+    .badge::before { content: '\2702\FE0F'; font-size: 14px; }
+
+    .logo {
+      font-size: 64px; font-weight: 700; letter-spacing: -2px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s ease-out 0.1s both;
+    }
+    .logo span { color: #ff4d4d; }
+
+    .tagline {
+      font-size: 22px; color: #a1a1aa; font-weight: 400;
+      margin-bottom: 16px; max-width: 500px; line-height: 1.5;
+      animation: fadeUp 0.6s ease-out 0.2s both;
+    }
+
+    .sub {
+      font-size: 15px; color: #52525b; max-width: 520px; line-height: 1.7;
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s ease-out 0.3s both;
+    }
+
+    .cta-row {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.6s ease-out 0.4s both;
+      margin-bottom: 12px;
+    }
+
+    .cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; background: #ff4d4d; color: white;
+      font-size: 15px; font-weight: 600; border-radius: 12px;
+      text-decoration: none; transition: all 0.2s; font-family: inherit;
+      box-shadow: 0 4px 24px rgba(255,77,77,0.25);
+    }
+    .cta:hover { filter: brightness(0.9); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,77,77,0.35); }
+    .cta svg { width: 18px; height: 18px; }
+
+    .note {
+      font-size: 13px; color: #3f3f46;
+      animation: fadeUp 0.6s ease-out 0.45s both;
+    }
+
+    /* Video section */
+    .video-section {
+      position: relative; z-index: 1;
+      max-width: 800px; margin: 48px auto 0; padding: 0 24px;
+      animation: fadeUp 0.8s ease-out 0.5s both;
+    }
+
+    .video-wrap {
+      position: relative; width: 100%; padding-top: 56.25%;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    }
+    .video-wrap iframe {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
+    }
+
+    /* Features */
+    .features {
+      position: relative; z-index: 1;
+      display: flex; gap: 24px; max-width: 800px;
+      margin: 64px auto 0; padding: 0 24px;
+      animation: fadeUp 0.8s ease-out 0.7s both;
+    }
+
+    .feature {
+      flex: 1; padding: 28px 24px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .feature:hover {
+      border-color: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .feature-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px;
+    }
+    .feature-num.red { background: #ff4d4d; }
+    .feature-num.blue { background: #3b82f6; }
+    .feature-num.green { background: #22c55e; }
+
+    .feature-title {
+      font-size: 16px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 13px; color: #71717a; line-height: 1.6;
+    }
+
+    /* Bottom CTA section */
+    .bottom-cta {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 64px 24px 32px; text-align: center;
+    }
+    .bottom-cta .tagline-sm {
+      font-size: 18px; color: #a1a1aa; margin-bottom: 24px; font-weight: 400;
+    }
+    .bottom-cta .note { margin-top: 12px; }
+
+    /* Footer */
+    .footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 24px 24px 32px;
+      font-size: 12px; color: #27272a;
+    }
+    .footer a { color: #3f3f46; text-decoration: none; }
+    .footer a:hover { color: #71717a; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 48px 20px 32px; }
+      .logo { font-size: 48px; }
+      .tagline { font-size: 18px; }
+      .features { flex-direction: column; gap: 16px; }
+      .video-section { margin-top: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <section class="hero">
+    <div class="badge">AI-Powered Chrome Extension</div>
+    <div class="logo">Snip<span>Snip</span></div>
+    <div class="tagline">Never lose what you find online.</div>
+    <div class="sub">Capture anything on the web with a simple drag. Share it instantly. AI organizes everything so you find it later. No tags. No folders required. Just search.</div>
+    <div class="cta-row">
+      <a href="https://chrome.google.com/webstore" class="cta" id="ctaTop" data-pos="top" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Get SnipSnip — Free
+      </a>
+    </div>
+    <div class="note">Free Chrome Extension · No account required to start</div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-wrap">
+      <iframe
+        src="https://www.youtube.com/embed/lKc-k8xpENE?rel=0&modestbranding=1"
+        title="SnipSnip — AI-Powered Screenshot Capture & Share"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <div class="feature-num red">1</div>
+      <div class="feature-title">Capture</div>
+      <div class="feature-desc">Drag over anything on any webpage. One second. Done. Clean screenshot saved instantly.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-num blue">2</div>
+      <div class="feature-title">Share</div>
+      <div class="feature-desc">Share link copied the moment you release. Paste it anywhere. Hold C to copy the image instead.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-num green">3</div>
+      <div class="feature-title">Organize</div>
+      <div class="feature-desc">AI indexes every capture. Search "revenue chart" weeks later and find it. No tagging needed.</div>
+    </div>
+  </section>
+
+  <section class="bottom-cta">
+    <div class="tagline-sm">Ready to stop losing what you find?</div>
+    <a href="https://chrome.google.com/webstore" class="cta" id="ctaBottom" data-pos="bottom" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Get SnipSnip — Free
+    </a>
+    <div class="note">Free Chrome Extension · No account required to start</div>
+  </section>
+
+  <div class="footer">
+    &copy; 2026 SnipSnip &middot; <a href="/privacy">Privacy Policy</a>
+  </div>
+
+  <script>
+    (function() {
+      // Referral tracking
+      // Track page view (server deduplicates by IP)
+      navigator.sendBeacon('/api/view', new Blob(
+        [JSON.stringify({ page: 'landing', referrer: document.referrer || null })],
+        { type: 'application/json' }
+      ));
+
+      // Referral tracking
+      var params = new URLSearchParams(window.location.search);
+      var ref = params.get('ref');
+      if (ref && ref.length > 0 && ref.length < 50) {
+        fetch('/api/referral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ share_code: ref })
+        }).catch(function() {});
+      }
+
+      // CTA click tracking
+      document.querySelectorAll('.cta[data-pos]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var pos = btn.getAttribute('data-pos');
+          navigator.sendBeacon('/api/cta', new Blob(
+            [JSON.stringify({ page: 'landing', button_position: pos })],
+            { type: 'application/json' }
+          ));
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

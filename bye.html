@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We're sorry to see you go — SnipSnip</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #09090b; color: #e4e4e7; min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex; align-items: center; justify-content: center; padding: 40px 20px;
+    }
+    .card {
+      max-width: 480px; width: 100%; text-align: center;
+    }
+    .emoji { font-size: 48px; margin-bottom: 20px; }
+    .title {
+      font-size: 24px; font-weight: 700; margin-bottom: 8px;
+    }
+    .title span { color: #ff4d4d; }
+    .sub {
+      font-size: 14px; color: #71717a; line-height: 1.6; margin-bottom: 32px;
+    }
+    .reasons {
+      display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; text-align: left;
+    }
+    .reason {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      background: #18181b; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .reason:hover { border-color: rgba(255,255,255,0.12); background: #1f1f23; }
+    .reason.selected { border-color: #ff4d4d; background: rgba(255,77,77,0.06); }
+    .reason input { display: none; }
+    .reason-radio {
+      width: 18px; height: 18px; border-radius: 50%; border: 2px solid #3f3f46;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .reason.selected .reason-radio {
+      border-color: #ff4d4d;
+    }
+    .reason.selected .reason-radio::after {
+      content: ''; width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d;
+    }
+    .reason-text { font-size: 14px; color: #a1a1aa; }
+    .reason.selected .reason-text { color: #e4e4e7; }
+    .details-wrap {
+      margin-bottom: 24px; display: none;
+    }
+    .details-wrap.show { display: block; }
+    .details-wrap textarea {
+      width: 100%; padding: 12px 14px; background: #18181b; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; color: #e4e4e7; font-size: 14px; font-family: inherit;
+      resize: vertical; min-height: 80px; outline: none; transition: border-color 0.15s;
+    }
+    .details-wrap textarea:focus { border-color: #ff4d4d; }
+    .details-wrap textarea::placeholder { color: #3f3f46; }
+    .submit-btn {
+      padding: 12px 32px; background: #ff4d4d; color: #fff; font-size: 14px;
+      font-weight: 600; border: none; border-radius: 10px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s; opacity: 0.4; pointer-events: none;
+    }
+    .submit-btn.active { opacity: 1; pointer-events: auto; }
+    .submit-btn.active:hover { filter: brightness(0.9); transform: translateY(-1px); }
+    .skip {
+      display: block; margin-top: 16px; font-size: 12px; color: #3f3f46;
+      text-decoration: none; cursor: pointer; border: none; background: none; font-family: inherit;
+    }
+    .skip:hover { color: #71717a; }
+    .thank-you { display: none; }
+    .thank-you.show { display: block; }
+    .thank-you .emoji { margin-bottom: 16px; }
+    .thank-you .title { margin-bottom: 12px; }
+    .thank-you .sub { margin-bottom: 24px; }
+    .reinstall {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+      color: #a1a1aa; font-size: 13px; font-weight: 500; border-radius: 10px;
+      text-decoration: none; font-family: inherit; transition: all 0.15s;
+    }
+    .reinstall:hover { background: rgba(255,255,255,0.1); color: #e4e4e7; }
+  </style>
+</head>
+<body>
+  <div class="card" id="formCard">
+    <div class="emoji">👋</div>
+    <div class="title">We're sorry to see you go</div>
+    <div class="sub">Help us improve Snip<span style="color:#ff4d4d">Snip</span>. What made you uninstall?</div>
+
+    <div class="reasons" id="reasons">
+      <label class="reason" data-val="didnt_understand">
+        <input type="radio" name="reason" value="didnt_understand">
+        <div class="reason-radio"></div>
+        <span class="reason-text">I didn't understand how to use it</span>
+      </label>
+      <label class="reason" data-val="not_what_expected">
+        <input type="radio" name="reason" value="not_what_expected">
+        <div class="reason-radio"></div>
+        <span class="reason-text">It wasn't what I expected</span>
+      </label>
+      <label class="reason" data-val="too_slow">
+        <input type="radio" name="reason" value="too_slow">
+        <div class="reason-radio"></div>
+        <span class="reason-text">It slowed down my browser</span>
+      </label>
+      <label class="reason" data-val="found_alternative">
+        <input type="radio" name="reason" value="found_alternative">
+        <div class="reason-radio"></div>
+        <span class="reason-text">I found a better alternative</span>
+      </label>
+      <label class="reason" data-val="missing_feature">
+        <input type="radio" name="reason" value="missing_feature">
+        <div class="reason-radio"></div>
+        <span class="reason-text">A feature I needed was missing</span>
+      </label>
+      <label class="reason" data-val="bugs">
+        <input type="radio" name="reason" value="bugs">
+        <div class="reason-radio"></div>
+        <span class="reason-text">I ran into bugs or errors</span>
+      </label>
+      <label class="reason" data-val="other">
+        <input type="radio" name="reason" value="other">
+        <div class="reason-radio"></div>
+        <span class="reason-text">Other</span>
+      </label>
+    </div>
+
+    <div class="details-wrap" id="detailsWrap">
+      <textarea id="details" placeholder="Tell us more (optional)..." maxlength="500"></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn">Send Feedback</button>
+    <button class="skip" id="skipBtn">No thanks</button>
+  </div>
+
+  <div class="card thank-you" id="thankYou">
+    <div class="emoji">🙏</div>
+    <div class="title">Thanks for your feedback</div>
+    <div class="sub">We'll use this to make Snip<span style="color:#ff4d4d">Snip</span> better. If you ever want to give us another shot:</div>
+    <a href="https://snipsnip.ai" class="reinstall">✂️ Reinstall SnipSnip</a>
+  </div>
+
+  <script>
+    var selectedReason = null;
+    var params = new URLSearchParams(window.location.search);
+    var uid = params.get('uid') || 'unknown';
+
+    // Track page view (someone actually hit the uninstall page)
+    navigator.sendBeacon('/api/view', new Blob(
+      [JSON.stringify({ page: 'uninstall', referrer: document.referrer })],
+      { type: 'application/json' }
+    ));
+
+    // Reason selection
+    document.querySelectorAll('.reason').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.reason').forEach(function(r) { r.classList.remove('selected'); });
+        el.classList.add('selected');
+        selectedReason = el.getAttribute('data-val');
+        document.getElementById('submitBtn').classList.add('active');
+        document.getElementById('detailsWrap').classList.add('show');
+      });
+    });
+
+    // Submit
+    document.getElementById('submitBtn').addEventListener('click', function() {
+      if (!selectedReason) return;
+      var details = document.getElementById('details').value.trim();
+      navigator.sendBeacon('/api/uninstall', new Blob(
+        [JSON.stringify({ uid: uid, reason: selectedReason, details: details || null })],
+        { type: 'application/json' }
+      ));
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('thankYou').classList.add('show');
+    });
+
+    // Skip
+    document.getElementById('skipBtn').addEventListener('click', function() {
+      navigator.sendBeacon('/api/uninstall', new Blob(
+        [JSON.stringify({ uid: uid, reason: 'skipped', details: null })],
+        { type: 'application/json' }
+      ));
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('thankYou').classList.add('show');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — SnipSnip</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #09090b; color: #d4d4d8; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .header { padding: 20px 32px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; text-decoration: none; color: #e4e4e7; }
+    .logo span { color: #ff4d4d; }
+    .content { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    h1 { font-size: 28px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px; }
+    .updated { font-size: 13px; color: #52525b; margin-bottom: 40px; }
+    h2 { font-size: 18px; font-weight: 600; color: #e4e4e7; margin-top: 32px; margin-bottom: 12px; }
+    p { font-size: 15px; line-height: 1.7; margin-bottom: 16px; color: #a1a1aa; }
+    ul { margin: 0 0 16px 20px; }
+    li { font-size: 15px; line-height: 1.7; color: #a1a1aa; margin-bottom: 4px; }
+    a { color: #ff4d4d; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="header"><a href="/" class="logo">Snip<span>Snip</span></a></div>
+  <div class="content">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: March 17, 2026</p>
+
+    <p>SnipSnip ("we", "our", "the extension") is a Chrome browser extension built by Bardi Capital. This privacy policy explains what data we collect, how we use it, and your rights.</p>
+
+    <h2>1. How SnipSnip Works</h2>
+    <p>SnipSnip lets you capture screenshots, notes, and text from any webpage. Your snips are stored locally on your device by default. If you sign in with Google, your data is also synced to our cloud servers so you can access it across devices.</p>
+
+    <h2>2. Data Stored Locally</h2>
+    <p>All snips — including screenshots, notes, extracted page text, and folder organization — are saved to your device using Chrome's built-in storage. This local data is accessible only to you and can be deleted at any time.</p>
+
+    <h2>3. Data Stored in the Cloud (When Signed In)</h2>
+    <p>If you choose to sign in with Google, the following data is synced to our cloud servers (hosted on Supabase):</p>
+    <ul>
+      <li>Your email address (from Google sign-in, used for account identification)</li>
+      <li>Snip content: screenshots, notes, extracted page text, source URLs, and page titles</li>
+      <li>Folder names and organization</li>
+      <li>AI-generated descriptions of your snips (summaries, keywords, topics)</li>
+      <li>Timestamps</li>
+    </ul>
+    <p>This data is stored securely and is accessible only to your account. We use <a href="https://supabase.com" target="_blank">Supabase</a> for cloud storage, authentication, and serverless functions. Supabase's privacy policy applies to data stored on their infrastructure.</p>
+
+    <h2>4. Sharing Features</h2>
+    <p>When you share a snip or folder, a unique public link is generated. Anyone with that link can view the shared content — including screenshots, notes, and source URLs. You can revoke a share link at any time, which immediately disables access.</p>
+    <p>Shared content is served from our cloud servers. No additional personal information about you is exposed through share links.</p>
+
+    <h2>5. AI-Powered Features</h2>
+    <p>SnipSnip uses AI (powered by Anthropic's Claude) to automatically generate searchable descriptions of your snips. When this feature runs:</p>
+    <ul>
+      <li>The screenshot or extracted text is sent to our server-side function, which forwards it to Anthropic's API for processing</li>
+      <li>The AI-generated description is stored alongside your snip (locally and in the cloud if signed in)</li>
+      <li>We do not retain data sent to Anthropic beyond the processing request</li>
+    </ul>
+    <p>Anthropic's <a href="https://www.anthropic.com/privacy" target="_blank">privacy policy</a> applies to data processed by their service. Your API key is never exposed — all AI processing is handled through our secure server-side functions.</p>
+
+    <h2>6. Anonymous Analytics</h2>
+    <p>We collect anonymous usage analytics to improve the product. These include:</p>
+    <ul>
+      <li>A randomly generated anonymous user ID (not linked to your name, email, or personal information)</li>
+      <li>Event types such as "snip saved," "library opened," or "folder created"</li>
+      <li>The hostname of the website where a snip was taken (e.g., "twitter.com")</li>
+      <li>Timestamps</li>
+    </ul>
+    <p>This data is used solely by the SnipSnip team to improve the product.</p>
+
+    <h2>7. What We Do NOT Collect</h2>
+    <ul>
+      <li>No browsing history beyond pages where you actively snip</li>
+      <li>No passwords or financial information</li>
+      <li>No mouse tracking, keystroke logging, or behavioral monitoring</li>
+      <li>No data from pages you visit but don't snip</li>
+    </ul>
+
+    <h2>8. Data Sharing with Third Parties</h2>
+    <p>We do not sell, rent, or share your personal data with any third parties for advertising or marketing purposes. We use the following third-party services to operate SnipSnip:</p>
+    <ul>
+      <li><strong>Supabase</strong> — Cloud database, authentication, file storage, and serverless functions</li>
+      <li><strong>Google</strong> — OAuth sign-in</li>
+      <li><strong>Anthropic</strong> — AI-powered snip descriptions</li>
+    </ul>
+    <p>Each service processes data according to their own privacy policies.</p>
+
+    <h2>9. Data Deletion</h2>
+    <p>You can delete your data at any time by:</p>
+    <ul>
+      <li>Deleting individual snips or folders within the extension</li>
+      <li>Signing out (cloud data remains but is not actively synced)</li>
+      <li>Uninstalling the extension (removes all local data)</li>
+      <li>Contacting us to request full deletion of your cloud data</li>
+    </ul>
+
+    <h2>10. Data Security</h2>
+    <p>All data transmitted between the extension and our servers is encrypted using HTTPS. Cloud data is protected by Supabase's security infrastructure, including row-level security policies that ensure users can only access their own data.</p>
+
+    <h2>11. Children's Privacy</h2>
+    <p>SnipSnip is not intended for children under 13. We do not knowingly collect data from children.</p>
+
+    <h2>12. Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. Changes will be reflected by updating the "Last updated" date above.</p>
+
+    <h2>13. Contact</h2>
+    <p>If you have questions about this privacy policy or want to request data deletion, contact us at <a href="mailto:mtbardi@gmail.com">mtbardi@gmail.com</a>.</p>
+  </div>
+</body>
+</html>

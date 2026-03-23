@@ -1,0 +1,1 @@
+{"outputDirectory":".","cleanUrls":true,"rewrites":[{"source":"/share","destination":"/api/share"}]}
