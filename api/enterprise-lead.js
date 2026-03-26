@@ -42,19 +42,23 @@ export default async function handler(req, res) {
     }
 
     // Send to Make.com webhook for email notification
-    fetch(MAKE_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        email,
-        company,
-        team_size,
-        use_case: use_case || 'Not provided',
-        source: source || 'website',
-        submitted_at: new Date().toISOString(),
-      }),
-    }).catch(err => console.error('Make webhook failed:', err));
+    try {
+      await fetch(MAKE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          company,
+          team_size,
+          use_case: use_case || 'Not provided',
+          source: source || 'website',
+          submitted_at: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.error('Make webhook failed:', err);
+    }
 
     return res.status(200).json({ ok: true });
   } catch (err) {
