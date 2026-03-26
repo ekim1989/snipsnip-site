@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnipSnip Enterprise — For Teams</title>
+  <meta name="description" content="SnipSnip for teams. Your brand, your infrastructure, full team management. Contact us to learn more.">
+  <meta property="og:title" content="SnipSnip Enterprise — For Teams">
+  <meta property="og:description" content="Your brand, your infrastructure, full team management.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #09090b; color: #e4e4e7; min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .glow {
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(255,77,77,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .back {
+      position: relative; z-index: 1;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 20px 24px;
+      font-size: 13px; color: #52525b; text-decoration: none;
+      transition: color 0.15s;
+    }
+    .back:hover { color: #a1a1aa; }
+    .back svg { width: 14px; height: 14px; }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 520px; margin: 0 auto;
+      padding: 20px 24px 80px;
+    }
+
+    .logo {
+      font-size: 28px; font-weight: 700; letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+    .logo span { color: #ff4d4d; }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 4px 10px; border-radius: 6px;
+      background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.2);
+      font-size: 11px; font-weight: 600; color: #ff4d4d;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
+      line-height: 1.2; margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 15px; color: #71717a; line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    .features-list {
+      margin-bottom: 40px; padding: 20px 24px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .features-list-title {
+      font-size: 12px; font-weight: 600; color: #52525b;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .feat-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; font-size: 14px; color: #a1a1aa;
+    }
+    .feat-item .check {
+      color: #22c55e; font-size: 15px; font-weight: 700;
+      flex-shrink: 0; width: 18px;
+    }
+
+    form { display: flex; flex-direction: column; gap: 16px; }
+
+    label {
+      display: flex; flex-direction: column; gap: 6px;
+      font-size: 13px; font-weight: 500; color: #a1a1aa;
+    }
+
+    input, select, textarea {
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #e4e4e7; font-size: 14px;
+      font-family: inherit; outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(255,77,77,0.4);
+    }
+    input::placeholder, textarea::placeholder { color: #3f3f46; }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    select option { background: #18181b; color: #e4e4e7; }
+
+    textarea { min-height: 100px; resize: vertical; }
+
+    .row { display: flex; gap: 16px; }
+    .row > label { flex: 1; }
+
+    .submit-btn {
+      padding: 14px 32px; background: #ff4d4d; color: white;
+      font-size: 15px; font-weight: 600; border-radius: 12px;
+      border: none; cursor: pointer; font-family: inherit;
+      transition: all 0.2s; margin-top: 8px;
+      box-shadow: 0 4px 24px rgba(255,77,77,0.25);
+    }
+    .submit-btn:hover { filter: brightness(0.9); transform: translateY(-1px); }
+    .submit-btn:disabled {
+      opacity: 0.5; cursor: not-allowed; transform: none;
+      filter: none;
+    }
+
+    .success-msg {
+      display: none; text-align: center; padding: 40px 0;
+    }
+    .success-msg .icon { font-size: 48px; margin-bottom: 16px; }
+    .success-msg h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .success-msg p { font-size: 14px; color: #71717a; line-height: 1.6; }
+
+    .error-msg {
+      display: none; padding: 12px 16px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px; font-size: 13px; color: #ef4444;
+    }
+
+    .footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 24px 24px 32px;
+      font-size: 12px; color: #27272a;
+    }
+    .footer a { color: #3f3f46; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .row { flex-direction: column; gap: 16px; }
+      h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <a href="/" class="back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to SnipSnip
+  </a>
+
+  <div class="container">
+    <div class="logo">Snip<span>Snip</span></div>
+    <div class="tier-badge">Enterprise</div>
+
+    <h1>Built for your team.</h1>
+    <p class="subtitle">Everything in Pro, plus your company's brand, your own infrastructure, team management, and dedicated support. Let's talk about what your team needs.</p>
+
+    <div class="features-list">
+      <div class="features-list-title">Everything in Pro, plus</div>
+      <div class="feat-item"><span class="check">&#10003;</span> Your company branding on all shared snips</div>
+      <div class="feat-item"><span class="check">&#10003;</span> Dedicated infrastructure (your data, your servers)</div>
+      <div class="feat-item"><span class="check">&#10003;</span> Add and manage team members</div>
+      <div class="feat-item"><span class="check">&#10003;</span> SSO / SAML authentication</div>
+      <div class="feat-item"><span class="check">&#10003;</span> Admin dashboard with usage analytics</div>
+      <div class="feat-item"><span class="check">&#10003;</span> Priority support and custom onboarding</div>
+    </div>
+
+    <div id="errorMsg" class="error-msg">Something went wrong. Please try again or email us at support@snipsnip.ai.</div>
+
+    <form id="leadForm">
+      <div class="row">
+        <label>
+          Your name
+          <input type="text" name="name" required placeholder="Jane Smith">
+        </label>
+        <label>
+          Work email
+          <input type="email" name="email" required placeholder="jane@company.com">
+        </label>
+      </div>
+
+      <div class="row">
+        <label>
+          Company
+          <input type="text" name="company" required placeholder="Acme Inc">
+        </label>
+        <label>
+          Team size
+          <select name="team_size" required>
+            <option value="" disabled selected>Select</option>
+            <option value="2-10">2 - 10</option>
+            <option value="11-50">11 - 50</option>
+            <option value="51-200">51 - 200</option>
+            <option value="200+">200+</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        What are you looking to do?
+        <textarea name="use_case" placeholder="Tell us about your team's workflow and what you'd like SnipSnip to help with..."></textarea>
+      </label>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Get in touch</button>
+    </form>
+
+    <div id="successMsg" class="success-msg">
+      <div class="icon">&#9989;</div>
+      <h2>We got your request.</h2>
+      <p>We'll reach out within 1 business day to set up a time to chat. In the meantime, you can try SnipSnip Pro for free.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 SnipSnip &middot; <a href="/privacy">Privacy Policy</a>
+  </div>
+
+  <script>
+    // Track page view
+    navigator.sendBeacon('/api/view', new Blob(
+      [JSON.stringify({ page: 'enterprise', referrer: document.referrer || null })],
+      { type: 'application/json' }
+    ));
+
+    var form = document.getElementById('leadForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var successMsg = document.getElementById('successMsg');
+    var errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
+      var data = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        company: form.company.value.trim(),
+        team_size: form.team_size.value,
+        use_case: form.use_case.value.trim(),
+        source: 'website'
+      };
+
+      fetch('/api/enterprise-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Failed');
+        form.style.display = 'none';
+        successMsg.style.display = 'block';
+      })
+      .catch(function() {
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Get in touch';
+      });
+    });
+  </script>
+</body>
+</html>
