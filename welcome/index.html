@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to SnipSnip</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #09090b; color: #e4e4e7; min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    .glow {
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(255,77,77,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Arrow pointing to top-right */
+    .arrow-container {
+      position: fixed; top: 24px; right: 80px;
+      z-index: 10;
+      animation: arrow-bounce 1.5s ease-in-out infinite;
+    }
+    @keyframes arrow-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    .arrow-container svg {
+      width: 80px; height: 120px;
+      filter: drop-shadow(0 4px 12px rgba(255,77,77,0.3));
+    }
+
+    .arrow-label {
+      position: fixed; top: 148px; right: 24px;
+      z-index: 10;
+      background: #ff4d4d;
+      color: #fff; font-size: 14px; font-weight: 700;
+      padding: 10px 18px; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(255,77,77,0.3);
+      animation: label-fade 0.6s ease-out 0.3s both;
+      white-space: nowrap;
+    }
+    .arrow-label::before {
+      content: '';
+      position: absolute; top: -6px; right: 40px;
+      width: 12px; height: 12px;
+      background: #ff4d4d;
+      transform: rotate(45deg);
+    }
+    @keyframes label-fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Main content */
+    .content {
+      position: relative; z-index: 1;
+      text-align: center; padding: 0 24px;
+      max-width: 520px;
+      animation: content-in 0.6s ease-out both;
+    }
+    @keyframes content-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-size: 48px; font-weight: 800; letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+    .logo span { color: #ff4d4d; }
+
+    h1 {
+      font-size: 36px; font-weight: 800; letter-spacing: -1px;
+      line-height: 1.2; margin-bottom: 16px;
+    }
+    h1 em {
+      font-style: normal; color: #ff4d4d;
+    }
+
+    .subtitle {
+      font-size: 17px; color: #71717a; line-height: 1.7;
+      margin-bottom: 48px;
+    }
+
+    .steps {
+      display: flex; flex-direction: column; gap: 20px;
+      text-align: left; margin-bottom: 48px;
+    }
+
+    .step {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      animation: step-in 0.5s ease-out both;
+    }
+    .step:nth-child(1) { animation-delay: 0.4s; }
+    .step:nth-child(2) { animation-delay: 0.55s; }
+    .step:nth-child(3) { animation-delay: 0.7s; }
+    @keyframes step-in {
+      from { opacity: 0; transform: translateX(-12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step:nth-child(1) .step-num { background: #ff4d4d; }
+    .step:nth-child(2) .step-num { background: #3b82f6; }
+    .step:nth-child(3) .step-num { background: #22c55e; }
+
+    .step-text {
+      font-size: 14px; color: #a1a1aa; line-height: 1.6;
+    }
+    .step-text strong { color: #e4e4e7; font-weight: 600; }
+
+    .key {
+      display: inline-block; padding: 1px 7px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 5px; font-size: 12px; font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #e4e4e7; vertical-align: 1px;
+    }
+
+    .try-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; background: #ff4d4d; color: white;
+      font-size: 15px; font-weight: 700; border-radius: 12px;
+      text-decoration: none; transition: all 0.2s; font-family: inherit;
+      box-shadow: 0 4px 24px rgba(255,77,77,0.25);
+      animation: btn-in 0.5s ease-out 0.85s both;
+    }
+    .try-btn:hover { filter: brightness(0.9); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,77,77,0.35); }
+    @keyframes btn-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hint {
+      margin-top: 16px; font-size: 12px; color: #3f3f46;
+      animation: btn-in 0.5s ease-out 1s both;
+    }
+
+    .footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      text-align: center; padding: 16px;
+      font-size: 12px; color: #27272a;
+    }
+    .footer a { color: #3f3f46; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .logo { font-size: 36px; }
+      h1 { font-size: 28px; }
+      .arrow-container { right: 40px; }
+      .arrow-label { right: 10px; font-size: 12px; top: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="arrow-container">
+    <svg viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 120 C40 120, 42 60, 55 30 C60 18, 58 8, 50 4" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M44 2 L50 4 L52 10" stroke="#ff4d4d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="arrow-label">Click the SnipSnip icon up here!</div>
+
+  <div class="content">
+    <div class="logo">Snip<span>Snip</span></div>
+    <h1>You're in. <em>Create your first Snip.</em></h1>
+    <p class="subtitle">SnipSnip is ready to go. Click the icon in your toolbar to start capturing.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Click the SnipSnip icon</strong> in the top-right of your browser (or press <span class="key">S</span> on any page).</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Drag to capture</strong> any area on a page. A share link is instantly copied to your clipboard.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Paste it anywhere.</strong> Slack, texts, email, docs. They see exactly what you captured.</div>
+      </div>
+    </div>
+
+    <a href="https://www.google.com" class="try-btn">Try it now on any page</a>
+    <div class="hint">Go to any website and click the SnipSnip icon to start</div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 SnipSnip &middot; <a href="/privacy">Privacy Policy</a>
+  </div>
+
+  <script>
+    navigator.sendBeacon('/api/view', new Blob(
+      [JSON.stringify({ page: 'welcome', referrer: document.referrer || null })],
+      { type: 'application/json' }
+    ));
+  </script>
+</body>
+</html>
