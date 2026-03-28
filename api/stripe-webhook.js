@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const SUPABASE_URL = 'https://ghstrzodoyxokligldqn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdoc3Ryem9kb3l4b2tsaWdsZHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NDQ3MDgsImV4cCI6MjA4OTEyMDcwOH0.fR6n6sCPphyum5yNxib0GvIWnGKKve4iboTEi7vq-cE';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdoc3Ryem9kb3l4b2tsaWdsZHFuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzU0NDcwOCwiZXhwIjoyMDg5MTIwNzA4fQ.Q_Ow9UfYAEh_BdNrphL_Q92MKGDXzggikm-4Zyfnfdw';
 const WEBHOOK_SECRET = 'whsec_K71G6YXzHJVKMhNzzmQRnij1SUjT0sbt';
 
 const HANDLED_EVENTS = [
@@ -34,8 +34,8 @@ async function sb(path, method, body) {
   const opts = {
     method: method || 'GET',
     headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'apikey': SUPABASE_SERVICE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
       'Content-Type': 'application/json',
       'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal',
     },
