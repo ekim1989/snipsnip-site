@@ -5,52 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome to SnipSnip</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #09090b; 
-      color: #e4e4e7; 
+      background: #09090b;
       min-height: 100vh;
-      font-family: 'DM Sans', system-ui, sans-serif;
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
+      display: flex;
+      align-items: center;
       justify-content: center;
       overflow: hidden;
-      text-align: center;
     }
-    .logo {
-      font-size: 36px; 
-      font-weight: 700; 
-      letter-spacing: -1px;
-      margin-bottom: 32px;
-    }
-    .logo span { color: #ff4d4d; }
-    h1 {
-      font-size: 56px; 
-      font-weight: 800; 
-      line-height: 1.1;
-      letter-spacing: -2px;
-    }
-    h1 .line1 { color: #ffffff; }
-    h1 .line2 {
-      color: #ff4d4d;
-      display: block;
-      margin-top: 8px;
-    }
-    @media (max-width: 640px) {
-      h1 { font-size: 42px; }
+    img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
     }
   </style>
 </head>
 <body>
-  <div class="logo">Snip<span>Snip</span></div>
-  <h1>
-    <span class="line1">You're in.</span>
-    <span class="line2">Create your first Snip.</span>
-  </h1>
-
+  <img src="/welcome/welcome-bg.png" alt="Welcome to SnipSnip">
   <script>
     navigator.sendBeacon('/api/view', new Blob(
       [JSON.stringify({ page: 'welcome', referrer: document.referrer || null })],
