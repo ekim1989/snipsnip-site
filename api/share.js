@@ -1,3 +1,29 @@
+const SUPABASE_URL = 'https://ghstrzodoyxokligldqn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdoc3Ryem9kb3l4b2tsaWdsZHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NDQ3MDgsImV4cCI6MjA4OTEyMDcwOH0.fR6n6sCPphyum5yNxib0GvIWnGKKve4iboTEi7vq-cE';
+
+async function getOwnerTier(code) {
+  try {
+    // Get user_id from shared_links by share_code
+    const linkResp = await fetch(
+      SUPABASE_URL + '/rest/v1/shared_links?share_code=eq.' + encodeURIComponent(code) + '&select=user_id&limit=1',
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }
+    );
+    const links = await linkResp.json();
+    if (!Array.isArray(links) || links.length === 0) return 'free';
+
+    // Get tier from profiles
+    const profResp = await fetch(
+      SUPABASE_URL + '/rest/v1/profiles?id=eq.' + links[0].user_id + '&select=tier&limit=1',
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }
+    );
+    const profiles = await profResp.json();
+    if (!Array.isArray(profiles) || profiles.length === 0) return 'free';
+    return profiles[0].tier || 'free';
+  } catch {
+    return 'free';
+  }
+}
+
 module.exports = async (req, res) => {
   const code = req.query.c;
   
@@ -8,8 +34,12 @@ module.exports = async (req, res) => {
 
   try {
     const apiUrl = 'https://ghstrzodoyxokligldqn.supabase.co/functions/v1/share-view?code=' + encodeURIComponent(code);
-    const response = await fetch(apiUrl);
+    const [response, ownerTier] = await Promise.all([
+      fetch(apiUrl),
+      getOwnerTier(code),
+    ]);
     const data = await response.json();
+    const isPro = ownerTier === 'pro';
 
     if (data.error) {
       res.setHeader('Content-Type', 'text/html');
@@ -36,7 +66,7 @@ module.exports = async (req, res) => {
       bodyContent = renderFolder(data);
     }
 
-    const html = buildPage(ogTitle, ogDesc, ogImage, code, bodyContent);
+    const html = buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro);
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).send(html);
@@ -118,10 +148,26 @@ function renderCard(s) {
 }
 
 function errorPage(title, text) {
-  return buildPage(title + ' — SnipSnip', text, '', '', '<div class="ep"><div class="ei">&#128279;</div><div class="et">' + esc(title) + '</div><div class="ex">' + esc(text) + '</div></div>');
+  return buildPage(title + ' — SnipSnip', text, '', '', '<div class="ep"><div class="ei">&#128279;</div><div class="et">' + esc(title) + '</div><div class="ex">' + esc(text) + '</div></div>', false);
 }
 
-function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent) {
+function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
+  var refParam = code ? '?ref=' + esc(code) : '';
+
+  var topBar = isPro ? '' :
+    '<div class="bn"><div class="bl"><div class="lo">Snip<span>Snip</span></div><div class="bt">Captured with SnipSnip — <strong>Never lose what you find online</strong></div></div>' +
+    '<a href="https://snipsnip.ai' + refParam + '" class="cta">Get SnipSnip — Free</a></div>';
+
+  var bottomCta = isPro ? '' :
+    '<div class="bc">' +
+      '<div class="bc-inner">' +
+        '<div class="lo" style="font-size:24px;margin-bottom:8px">Snip<span>Snip</span></div>' +
+        '<div class="bc-text">Capture anything on the web. Share it instantly. AI organizes everything.</div>' +
+        '<a href="https://snipsnip.ai' + refParam + '" class="cta" style="padding:12px 28px;font-size:14px">Get SnipSnip — Free</a>' +
+        '<div class="bc-note">Free Chrome Extension</div>' +
+      '</div>' +
+    '</div>';
+
   return '<!DOCTYPE html><html lang="en"><head>' +
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">' +
     '<title>' + esc(ogTitle) + ' — SnipSnip</title>' +
@@ -141,10 +187,10 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent) {
     '.bn{background:linear-gradient(135deg,#18181b,#1a1a2e);border-bottom:1px solid rgba(255,255,255,.05);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}' +
     '.bl{display:flex;align-items:center;gap:12px}.lo{font-size:18px;font-weight:700;letter-spacing:-.5px}.lo span{color:#ff4d4d}' +
     '.bt{font-size:13px;color:#71717a}.bt strong{color:#a1a1aa}' +
-    '.cta{padding:8px 20px;background:#ff4d4d;color:#fff;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;text-decoration:none;font-family:inherit;transition:.15s;white-space:nowrap}.cta:hover{filter:brightness(.9)}' +
+    '.cta{padding:8px 20px;background:#ff4d4d;color:#fff;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;text-decoration:none;font-family:inherit;transition:.15s;white-space:nowrap;display:inline-block}.cta:hover{filter:brightness(.9)}' +
     '.sh{padding:32px 32px 0;max-width:1200px;margin:0 auto}.st{font-size:12px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}' +
     '.sn{font-size:28px;font-weight:700;margin-bottom:8px}.sm{font-size:14px;color:#52525b;margin-bottom:24px}' +
-    '.gr{padding:24px 32px 80px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}' +
+    '.gr{padding:24px 32px 40px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}' +
     '.card{background:#18181b;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;transition:transform .15s,box-shadow .15s}' +
     '.card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}' +
     '.ciw{overflow:hidden;cursor:pointer}.ci{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#27272a}' +
@@ -162,14 +208,18 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent) {
     '.ep{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 32px;text-align:center}' +
     '.ei{font-size:48px;margin-bottom:16px;opacity:.3}.et{font-size:20px;font-weight:600;color:#71717a;margin-bottom:8px}' +
     '.ex{font-size:14px;color:#3f3f46;max-width:400px;line-height:1.6}' +
+    '.bc{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 56px;text-align:center}' +
+    '.bc-inner{max-width:400px;margin:0 auto}' +
+    '.bc-text{font-size:15px;color:#71717a;line-height:1.6;margin-bottom:20px}' +
+    '.bc-note{margin-top:12px;font-size:12px;color:#3f3f46}' +
     '.lb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);cursor:zoom-out}' +
     '.lb img{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default}' +
     '.lc{position:absolute;top:20px;right:24px;background:none;border:none;color:#71717a;font-size:28px;cursor:pointer;padding:8px;line-height:1}.lc:hover{color:#fff}' +
-    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 80px;grid-template-columns:1fr}.ss{padding:16px}}' +
+    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}}' +
     '</style></head><body>' +
-    '<div class="bn"><div class="bl"><div class="lo">Snip<span>Snip</span></div><div class="bt">Captured with SnipSnip — <strong>Never lose what you find online</strong></div></div>' +
-    '<a href="https://snipsnip.ai' + (code ? '?ref=' + esc(code) : '') + '" class="cta">Get SnipSnip — Free</a></div>' +
+    topBar +
     bodyContent +
+    bottomCta +
     '<script>function openLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var i=document.createElement("img");i.src=s;i.onclick=function(e){e.stopPropagation()};l.appendChild(i);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}</script>' +
     '</body></html>';
 }
