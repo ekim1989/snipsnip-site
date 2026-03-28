@@ -156,14 +156,14 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
 
   var topBar = isPro ? '' :
     '<div class="bn"><div class="bl"><div class="lo">Snip<span>Snip</span></div><div class="bt">Captured with SnipSnip — <strong>Never lose what you find online</strong></div></div>' +
-    '<a href="https://snipsnip.ai' + refParam + '" class="cta">Get SnipSnip — Free</a></div>';
+    '<a href="https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc" class="cta" target="_blank" rel="noopener">Get SnipSnip — Free</a></div>';
 
   var bottomCta = isPro ? '' :
     '<div class="bc">' +
       '<div class="bc-inner">' +
         '<div class="lo" style="font-size:24px;margin-bottom:8px">Snip<span>Snip</span></div>' +
         '<div class="bc-text">Capture anything on the web. Share it instantly. AI organizes everything.</div>' +
-        '<a href="https://snipsnip.ai' + refParam + '" class="cta" style="padding:12px 28px;font-size:14px">Get SnipSnip — Free</a>' +
+        '<a href="https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc" class="cta" style="padding:12px 28px;font-size:14px" target="_blank" rel="noopener">Get SnipSnip — Free</a>' +
         '<div class="bc-note">Free Chrome Extension</div>' +
       '</div>' +
     '</div>';
