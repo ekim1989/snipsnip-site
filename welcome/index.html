@@ -40,56 +40,23 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Arrow */
-    .arrow {
-      position: fixed; top: 12px; right: 68px;
-      z-index: 10;
-      animation: fade-in 0.5s ease-out 0.5s both;
-    }
-    .arrow svg {
-      width: 64px; height: 140px;
-      animation: bounce 1.8s ease-in-out infinite;
-      filter: drop-shadow(0 2px 8px rgba(255,77,77,0.25));
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-14px); }
-    }
-
-    .arrow-label {
-      position: fixed; top: 156px; right: 18px;
-      z-index: 10;
-      background: #ff4d4d; color: #fff;
-      font-size: 13px; font-weight: 700;
-      padding: 8px 16px; border-radius: 10px;
-      box-shadow: 0 6px 20px rgba(255,77,77,0.3);
-      white-space: nowrap;
-      animation: fade-in 0.5s ease-out 0.7s both;
-    }
-    .arrow-label::before {
-      content: '';
-      position: absolute; top: -5px; right: 36px;
-      width: 10px; height: 10px;
-      background: #ff4d4d;
-      transform: rotate(45deg);
+    .arrow-svg {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      z-index: 10; pointer-events: none;
+      animation: fade-in 0.6s ease-out 0.4s both;
     }
 
     @media (max-width: 640px) {
       h1 { font-size: 36px; }
-      .arrow { right: 30px; }
-      .arrow-label { right: 8px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="arrow">
-    <svg viewBox="0 0 64 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M32 140 C32 140, 34 70, 44 35 C48 22, 46 10, 40 4" stroke="#ff4d4d" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-      <path d="M35 1 L40 4 L42 11" stroke="#ff4d4d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-  </div>
-  <div class="arrow-label">Click here to start</div>
+  <svg class="arrow-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M820 520 C900 420, 1100 200, 1340 60 C1360 48, 1380 38, 1395 28" stroke="#ff4d4d" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M1385 18 L1398 26 L1402 40" stroke="#ff4d4d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>
 
   <div class="logo">Snip<span>Snip</span></div>
   <h1>You're in.<em>Create your first Snip.</em></h1>
