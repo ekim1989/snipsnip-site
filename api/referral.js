@@ -20,8 +20,10 @@ async function supabaseQuery(path, method, body) {
   if (method === 'PATCH') opts.headers['Prefer'] = 'return=representation';
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-  if (r.status === 204) return null;
-  return r.json();
+  if (r.status === 204 || r.status === 201) return null;
+  const text = await r.text();
+  if (!text) return null;
+  return JSON.parse(text);
 }
 
 module.exports = async (req, res) => {

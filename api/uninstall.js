@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        anonymous_id: uid || 'unknown',
+        uid: uid || 'unknown',
         reason: reason || 'unknown',
         details: details || null,
       }),
