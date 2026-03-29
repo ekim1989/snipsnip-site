@@ -29,6 +29,15 @@
       [JSON.stringify({ page: 'welcome', referrer: document.referrer || null })],
       { type: 'application/json' }
     ));
+
+    // Check for pending save from share page (deep link flow)
+    try {
+      var pendingCode = localStorage.getItem('ss_pending_save');
+      if (pendingCode) {
+        document.documentElement.dataset.pendingSave = pendingCode;
+        localStorage.removeItem('ss_pending_save');
+      }
+    } catch(e) {}
   </script>
 </body>
 </html>

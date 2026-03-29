@@ -257,6 +257,7 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
         'saveBtn.style.display="none";' +
         'document.getElementById("saveDone").style.display="inline-flex";' +
       '}else{' +
+        'try{localStorage.setItem("ss_pending_save",code)}catch(e){}' +
         'window.open("' + cwsUrl + '","_blank");' +
       '}' +
     '}}' +
