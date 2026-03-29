@@ -153,17 +153,35 @@ function errorPage(title, text) {
 
 function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
   var refParam = code ? '?ref=' + esc(code) : '';
+  var cwsUrl = 'https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc';
 
   var topBar = isPro ? '' :
     '<div class="bn"><div class="bl"><div class="lo">Snip<span>Snip</span></div><div class="bt">Captured with SnipSnip — <strong>Never lose what you find online</strong></div></div>' +
-    '<a href="https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc" class="cta" target="_blank" rel="noopener">Get SnipSnip — Free</a></div>';
+    '<a href="' + cwsUrl + '" class="cta" target="_blank" rel="noopener">Get SnipSnip — Free</a></div>';
+
+  // Save section shows for ALL users (free and pro)
+  var saveSection = code ?
+    '<div class="sv">' +
+      '<div class="sv-inner">' +
+        '<div class="sv-title">Want to keep this?</div>' +
+        '<div class="sv-text">Save it to your SnipSnip library in one click</div>' +
+        '<button class="sv-btn" id="saveSnipBtn">' +
+          '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>' +
+          'Save this Snip' +
+        '</button>' +
+        '<div class="sv-done" id="saveDone" style="display:none">' +
+          '<svg width="18" height="18" fill="none" stroke="#22c55e" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' +
+          'Saved!' +
+        '</div>' +
+      '</div>' +
+    '</div>' : '';
 
   var bottomCta = isPro ? '' :
     '<div class="bc">' +
       '<div class="bc-inner">' +
         '<div class="lo" style="font-size:24px;margin-bottom:8px">Snip<span>Snip</span></div>' +
         '<div class="bc-text">Capture anything on the web. Share it instantly. AI organizes everything.</div>' +
-        '<a href="https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc" class="cta" style="padding:12px 28px;font-size:14px" target="_blank" rel="noopener">Get SnipSnip — Free</a>' +
+        '<a href="' + cwsUrl + '" class="cta" style="padding:12px 28px;font-size:14px" target="_blank" rel="noopener">Get SnipSnip — Free</a>' +
         '<div class="bc-note">Free Chrome Extension</div>' +
       '</div>' +
     '</div>';
@@ -208,6 +226,12 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     '.ep{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 32px;text-align:center}' +
     '.ei{font-size:48px;margin-bottom:16px;opacity:.3}.et{font-size:20px;font-weight:600;color:#71717a;margin-bottom:8px}' +
     '.ex{font-size:14px;color:#3f3f46;max-width:400px;line-height:1.6}' +
+    '.sv{margin:0 24px;padding:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;text-align:center}' +
+    '.sv-inner{max-width:400px;margin:0 auto}' +
+    '.sv-title{font-size:14px;color:#e4e4e7;font-weight:600;margin-bottom:4px}' +
+    '.sv-text{font-size:12px;color:#52525b;margin-bottom:14px}' +
+    '.sv-btn{padding:10px 28px;background:#ff4d4d;color:#fff;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:8px}.sv-btn:hover{filter:brightness(.9)}' +
+    '.sv-done{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#22c55e;font-weight:600}' +
     '.bc{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 56px;text-align:center}' +
     '.bc-inner{max-width:400px;margin:0 auto}' +
     '.bc-text{font-size:15px;color:#71717a;line-height:1.6;margin-bottom:20px}' +
@@ -215,11 +239,27 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     '.lb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);cursor:zoom-out}' +
     '.lb img{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default}' +
     '.lc{position:absolute;top:20px;right:24px;background:none;border:none;color:#71717a;font-size:28px;cursor:pointer;padding:8px;line-height:1}.lc:hover{color:#fff}' +
-    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}}' +
+    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}.sv{margin:0 16px}}' +
     '</style></head><body>' +
     topBar +
     bodyContent +
+    saveSection +
     bottomCta +
-    '<script>function openLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var i=document.createElement("img");i.src=s;i.onclick=function(e){e.stopPropagation()};l.appendChild(i);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}</script>' +
+    '<script>' +
+    'function openLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var i=document.createElement("img");i.src=s;i.onclick=function(e){e.stopPropagation()};l.appendChild(i);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}' +
+    'var saveBtn=document.getElementById("saveSnipBtn");' +
+    'if(saveBtn){saveBtn.onclick=function(){' +
+      'var hasExt=document.documentElement.dataset.snipsnip==="installed";' +
+      'var code="' + esc(code || '') + '";' +
+      'navigator.sendBeacon("/api/cta",new Blob([JSON.stringify({page:"share_save",button_position:hasExt?"has_extension":"no_extension",share_code:code})],{type:"application/json"}));' +
+      'if(hasExt){' +
+        'window.dispatchEvent(new CustomEvent("snipsnip-save",{detail:{code:code}}));' +
+        'saveBtn.style.display="none";' +
+        'document.getElementById("saveDone").style.display="inline-flex";' +
+      '}else{' +
+        'window.open("' + cwsUrl + '","_blank");' +
+      '}' +
+    '}}' +
+    '</script>' +
     '</body></html>';
 }
