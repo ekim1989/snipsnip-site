@@ -118,14 +118,23 @@
       </div>
 
       <div class="sect">
-        <div class="sect-title">Acquisition funnel <span class="tip">?<span class="tt"><strong>Read this top to bottom.</strong> Each row is a gate in the journey from stranger to paying user. The "rate" column shows what % of people from the previous step made it through this gate. The bar fills toward the target rate. Green = healthy. Amber = needs attention. Red = broken, fix now. Two separate paths: the main funnel (landing page) and the viral funnel (share pages).</span></span></div>
+        <div class="sect-title">Acquisition funnel <span class="tip">?<span class="tt"><strong>From install to activated user.</strong> Three steps, top to bottom. Each rate shows what % of people from the previous step made it through. Green = healthy. Amber = needs attention. Red = broken, fix now. This is the core funnel that tells you if your product is converting installs into engaged users.</span></span></div>
         <div class="card">
           <div style="font-size:12px;color:#52525b;margin-bottom:12px;display:flex;justify-content:flex-end;gap:24px"><span>Count</span><span style="min-width:150px;text-align:center">Rate vs target</span><span style="min-width:60px;text-align:right">Rate</span></div>
           <div id="funnel-main"></div>
         </div>
-        <div class="card" style="margin-top:8px">
-          <div class="card-title">Viral path (share pages) <span class="tip">?<span class="tt"><strong>A separate entry point.</strong> People discover SnipSnip by viewing a shared snip, not from the landing page. This mini-funnel tracks how well those share pages convert viewers into users. This feeds into the main funnel at the "installs" step.</span></span></div>
+      </div>
+
+      <div class="g2 sect">
+        <div class="card">
+          <div class="card-title">Viral path (share pages) <span class="tip">?<span class="tt"><strong>A separate acquisition channel.</strong> People discover SnipSnip by viewing a shared snip. This tracks how well those share pages convert viewers into potential users. "Save this snip" clicks with no extension send people to the Chrome Web Store, feeding into the install funnel above.</span></span></div>
           <div id="funnel-viral"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Traffic sources <span class="tip">?<span class="tt"><strong>Where people find SnipSnip.</strong> Landing page views count visits to snipsnip.ai. CTA clicks count how many clicked "Get SnipSnip" to go to the Chrome Web Store. These aren't in the main funnel because many users install directly from the CWS without ever visiting the landing page.</span></span></div>
+          <div class="row"><span class="row-label">Landing page views</span><span class="row-val" id="f-landing">--</span></div>
+          <div class="row"><span class="row-label">CTA clicks (to CWS)</span><span class="row-val" id="f-cta">--</span></div>
+          <div class="row"><span class="row-label">Landing CTR <span class="tip">?<span class="tt"><strong>What % of landing page visitors clicked the CTA.</strong> A focused single-CTA page should convert 15-25%. Below 10% means the page isn't compelling. This is useful for optimizing the landing page, but it's not in the main funnel because installs come from multiple sources. <span class="tt-target">Target: 20%</span></span></span></span><span><span class="row-val" id="f-ctr">--</span><span class="row-target">target: 20%</span></span></div>
         </div>
       </div>
 
@@ -378,25 +387,51 @@
         html += '</div>';
         container.innerHTML += html;
       }
-      var mainEl = document.getElementById('funnel-main');
-      mainEl.innerHTML = '';
-      var ctaR = f.landing_views > 0 ? Math.round((f.cta_clicks/f.landing_views)*100) : 0;
-      var installR = f.cta_clicks > 0 ? Math.round((f.installs/f.cta_clicks)*100) : null;
       var signR = f.installs > 0 ? Math.round((f.signups/f.installs)*100) : null;
       var snipR = f.signups > 0 ? Math.round((f.first_snip/f.signups)*100) : 0;
-      var proR = f.signups > 0 ? parseFloat(((f.pro/f.signups)*100).toFixed(1)) : 0;
-      renderFunnelRow(mainEl, 'Landing page views', f.landing_views, null, 0, '<strong>Top of funnel.</strong> Total views of snipsnip.ai. This is everyone who found your site from any source (direct, search, social, referral). More views = more chances to convert.', '#85B7EB', true);
-      renderFunnelRow(mainEl, 'CTA clicks (to CWS)', f.cta_clicks, ctaR, 20, '<strong>What % of landing page visitors clicked "Get SnipSnip"?</strong> A focused single-CTA page should convert 15-25%. Below 10% means the page copy or design isn\'t compelling. Above 25% is excellent. <span class="tt-target">Target: 20% of landing views</span>', '#85B7EB', false);
-      renderFunnelRow(mainEl, 'Installs', f.installs, installR, 40, '<strong>What % of CWS visitors actually installed?</strong> A well-optimized Chrome Web Store listing converts 30-50% of visitors. If this is low, improve your CWS screenshots, description, or rating. Note: installs can also come from share links or direct CWS search, so this rate can exceed 100%. That\'s a good sign, it means people are finding you through multiple channels. <span class="tt-target">Target: 40% of CTA clicks</span>', '#5DCAA5', false);
-      renderFunnelRow(mainEl, 'Sign-ups', f.signups, signR, 70, '<strong>What % of people who installed also created an account?</strong> Google OAuth is low friction, so this should be high. If it\'s low, the sign-in prompt might not be visible enough or people don\'t understand why they need an account. <span class="tt-target">Target: 70% of installs</span>', '#5DCAA5', false);
+      var mainEl = document.getElementById('funnel-main');
+      mainEl.innerHTML = '';
+      renderFunnelRow(mainEl, 'Installs', f.installs, null, 0, '<strong>Top of funnel.</strong> Total Chrome extension installs, measured by welcome page views. This counts every install from every source (landing page, Chrome Web Store search, share links, direct links). The welcome page opens automatically on first install, so it captures everyone.', '#5DCAA5', true);
+      renderFunnelRow(mainEl, 'Sign-ups', f.signups, signR, 70, '<strong>What % of people who installed also signed in with Google?</strong> This should be high because Google OAuth is low friction. If it\'s low, the sign-in prompt might not be visible enough or people don\'t understand why they need an account. <span class="tt-target">Target: 70% of installs</span>', '#5DCAA5', false);
       renderFunnelRow(mainEl, 'First snip taken', f.first_snip, snipR, 80, '<strong>The activation moment.</strong> What % of signed-up users took their first snip? This is the most important gate. Someone who snips has experienced the core value. If this is low, your onboarding is failing. People signed up but don\'t know what to do. <span class="tt-target">Target: 80% of sign-ups</span>', '#1D9E75', false);
-      renderFunnelRow(mainEl, 'Pro conversions', f.pro, proR, 3, '<strong>What % of users are paying?</strong> Freemium standard is 2-5%. Spotify ~3-4%, Dropbox ~2-4%. Below 2% means free tier is too generous or Pro doesn\'t feel worth $8/mo. Above 5% is exceptional. <span class="tt-target">Target: 3% of total users</span>', '#7F77DD', false);
+
+      // Traffic sources
+      document.getElementById('f-landing').textContent=f.landing_views;
+      document.getElementById('f-cta').textContent=f.cta_clicks;
+      var ctr = f.landing_views > 0 ? Math.round((f.cta_clicks/f.landing_views)*100) : 0;
+      var ctrEl = document.getElementById('f-ctr');
+      ctrEl.textContent = ctr + '%';
+      ctrEl.className = 'row-val ' + sc(ctr, 20);
+
+      // Viral path
       var viralEl = document.getElementById('funnel-viral');
       viralEl.innerHTML = '';
       var saveR = f.share_views > 0 ? Math.round((f.save_clicks/f.share_views)*100) : null;
-      renderFunnelRow(viralEl, 'Share page views', f.share_views, null, 0, '<strong>How many people viewed a shared snip.</strong> Each view is a potential new user discovering SnipSnip through someone else\'s share link. This number grows as your existing users share more.', '#AFA9EC', true);
-      renderFunnelRow(viralEl, '"Save this snip" clicks', f.save_clicks, saveR, 15, '<strong>What % of share page viewers wanted to keep the snip?</strong> This measures how compelling the shared content is. If this is low, the share page might need a stronger call-to-action or better preview. <span class="tt-target">Target: 15% of share views</span>', '#AFA9EC', false);
-
+      renderFunnelRow(viralEl, 'Share page views', f.share_views, null, 0, '<strong>How many people viewed a shared snip.</strong> Each view is a potential new user discovering SnipSnip through someone else\'s share link.', '#AFA9EC', true);
+      renderFunnelRow(viralEl, '"Save this snip" clicks', f.save_clicks, saveR, 15, '<strong>What % of share page viewers wanted to keep the snip?</strong> If they have the extension, it saves instantly. If not, they\'re sent to the Chrome Web Store. <span class="tt-target">Target: 15% of share views</span>', '#AFA9EC', false);
+        var rateNum = rate !== null ? rate : null;
+        var barPct = (rateNum !== null && target > 0) ? Math.min(100, Math.round((rateNum / target) * 100)) : 0;
+        var colorClass = rateNum !== null ? sc(rateNum, target) : 'flat';
+        var barColor = colorClass === 'up' ? '#22c55e' : colorClass === 'warn' ? '#f59e0b' : colorClass === 'down' ? '#ef4444' : '#3f3f46';
+        var html = '';
+        if (!isTop) html += '<div class="fn-arrow">&#x2193;</div>';
+        html += '<div class="fn-row">';
+        html += '<div class="fn-step">' + label;
+        if (tooltip) html += ' <span class="tip">?<span class="tt">' + tooltip + '</span></span>';
+        html += '</div>';
+        html += '<div class="fn-count">' + count + '</div>';
+        if (rateNum !== null) {
+          html += '<div class="fn-bar-wrap"><div class="fn-bar" style="width:' + barPct + '%;background:' + barColor + '"></div>';
+          html += '<div class="fn-target-line" style="left:100%"></div></div>';
+          html += '<div class="fn-rate ' + colorClass + '">' + rateNum + '%</div>';
+          html += '<div class="fn-top">/ ' + target + '%</div>';
+        } else {
+          html += '<div class="fn-bar-wrap"></div><div class="fn-rate" style="color:#52525b">' + (isTop ? 'top' : 'n/a') + '</div><div class="fn-top"></div>';
+        }
+        html += '</div>';
+        container.innerHTML += html;
+      }
+      var mainEl = document.getElementById('funnel-main');
       buildChart(d.daily.dates,d.daily.snips,d.daily.shares,d.daily.users);
 
       var r=d.retention;
