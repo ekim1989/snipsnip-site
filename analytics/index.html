@@ -373,7 +373,7 @@
           html += '<div class="fn-rate ' + colorClass + '">' + rateNum + '%</div>';
           html += '<div class="fn-top">/ ' + target + '%</div>';
         } else {
-          html += '<div class="fn-bar-wrap"></div><div class="fn-rate" style="color:#52525b">top</div><div class="fn-top"></div>';
+          html += '<div class="fn-bar-wrap"></div><div class="fn-rate" style="color:#52525b">' + (isTop ? 'top' : 'n/a') + '</div><div class="fn-top"></div>';
         }
         html += '</div>';
         container.innerHTML += html;
@@ -381,13 +381,14 @@
       var mainEl = document.getElementById('funnel-main');
       mainEl.innerHTML = '';
       var ctaR = f.landing_views > 0 ? Math.round((f.cta_clicks/f.landing_views)*100) : 0;
+      var installR = f.cta_clicks > 0 ? Math.round((f.installs/f.cta_clicks)*100) : null;
       var signR = f.installs > 0 ? Math.round((f.signups/f.installs)*100) : null;
       var snipR = f.signups > 0 ? Math.round((f.first_snip/f.signups)*100) : 0;
       var proR = f.signups > 0 ? parseFloat(((f.pro/f.signups)*100).toFixed(1)) : 0;
       renderFunnelRow(mainEl, 'Landing page views', f.landing_views, null, 0, '<strong>Top of funnel.</strong> Total views of snipsnip.ai. This is everyone who found your site from any source (direct, search, social, referral). More views = more chances to convert.', '#85B7EB', true);
       renderFunnelRow(mainEl, 'CTA clicks (to CWS)', f.cta_clicks, ctaR, 20, '<strong>What % of landing page visitors clicked "Get SnipSnip"?</strong> A focused single-CTA page should convert 15-25%. Below 10% means the page copy or design isn\'t compelling. Above 25% is excellent. <span class="tt-target">Target: 20% of landing views</span>', '#85B7EB', false);
-      renderFunnelRow(mainEl, 'Installs (welcome page)', f.installs, null, 0, '<strong>Total installs from ALL sources</strong> (landing page, Chrome Web Store search, share links, direct links). The welcome page opens automatically on first install, so this is the most reliable count. Can\'t calculate a rate here because installs come from multiple paths.', '#5DCAA5', false);
-      renderFunnelRow(mainEl, 'Sign-ups (accounts)', f.signups, signR, 70, '<strong>What % of people who installed also created an account?</strong> Google OAuth is low friction, so this should be high. If it\'s low, the sign-in prompt might not be visible enough or people don\'t understand why they need an account. <span class="tt-target">Target: 70% of installs</span>', '#5DCAA5', false);
+      renderFunnelRow(mainEl, 'Installs', f.installs, installR, 40, '<strong>What % of CWS visitors actually installed?</strong> A well-optimized Chrome Web Store listing converts 30-50% of visitors. If this is low, improve your CWS screenshots, description, or rating. Note: installs can also come from share links or direct CWS search, so this rate can exceed 100%. That\'s a good sign, it means people are finding you through multiple channels. <span class="tt-target">Target: 40% of CTA clicks</span>', '#5DCAA5', false);
+      renderFunnelRow(mainEl, 'Sign-ups', f.signups, signR, 70, '<strong>What % of people who installed also created an account?</strong> Google OAuth is low friction, so this should be high. If it\'s low, the sign-in prompt might not be visible enough or people don\'t understand why they need an account. <span class="tt-target">Target: 70% of installs</span>', '#5DCAA5', false);
       renderFunnelRow(mainEl, 'First snip taken', f.first_snip, snipR, 80, '<strong>The activation moment.</strong> What % of signed-up users took their first snip? This is the most important gate. Someone who snips has experienced the core value. If this is low, your onboarding is failing. People signed up but don\'t know what to do. <span class="tt-target">Target: 80% of sign-ups</span>', '#1D9E75', false);
       renderFunnelRow(mainEl, 'Pro conversions', f.pro, proR, 3, '<strong>What % of users are paying?</strong> Freemium standard is 2-5%. Spotify ~3-4%, Dropbox ~2-4%. Below 2% means free tier is too generous or Pro doesn\'t feel worth $8/mo. Above 5% is exceptional. <span class="tt-target">Target: 3% of total users</span>', '#7F77DD', false);
       var viralEl = document.getElementById('funnel-viral');
