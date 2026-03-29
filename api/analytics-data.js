@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
       sb('profiles?select=*'),
       sb('snips?select=id&deleted=eq.false'),
       sb('snips?select=id&deleted=eq.false&created_at=gte.' + d7),
-      sb('shared_links?select=id,created_at'),
+      sb('shared_links?select=id,user_id,created_at'),
       sb('shared_links?select=id&created_at=gte.' + d7),
       sb('folders?select=id,user_id&deleted=eq.false'),
       sb('page_views?select=*&order=created_at.desc&limit=500'),
@@ -102,7 +102,7 @@ module.exports = async (req, res) => {
     });
 
     // Funnel
-    var ctaCws = ctaList.filter(function(c) { return c.button_position !== 'share_save'; }).length;
+    var ctaCws = ctaList.filter(function(c) { return c.page !== 'share_save'; }).length;
     var usersWithSnips = new Set(snips30List.map(function(s) { return s.user_id; })).size;
 
     // Share page performance
@@ -114,7 +114,7 @@ module.exports = async (req, res) => {
 
     // Feature adoption
     var usersWithFolders = new Set(folderList.map(function(f) { return f.user_id; })).size;
-    var usersWhoShared = new Set(shareList.map(function() { return true; })).size; // approximate
+    var usersWhoShared = new Set(shareList.map(function(s) { return s.user_id; }).filter(Boolean)).size;
     var nudgeShown = nudgeList.filter(function(n) { return n.action === 'shown'; }).length;
     var nudgeClicked = nudgeList.filter(function(n) { return n.action === 'clicked'; }).length;
 
@@ -208,7 +208,7 @@ module.exports = async (req, res) => {
       features: {
         created_snip: totalUsers > 0 ? Math.round((usersWithSnips / totalUsers) * 100) : 0,
         used_folders: totalUsers > 0 ? Math.round((usersWithFolders / totalUsers) * 100) : 0,
-        shared: totalUsers > 0 ? Math.round((shareList.length > 0 ? Math.min(usersWithSnips, shareList.length) : 0) / totalUsers * 100) : 0,
+        shared: totalUsers > 0 ? Math.round((usersWhoShared / totalUsers) * 100) : 0,
         mcp_keys: keyList.length,
         nudge_shown: nudgeShown,
         nudge_clicked: nudgeClicked,

@@ -246,6 +246,7 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     saveSection +
     bottomCta +
     '<script>' +
+    'navigator.sendBeacon("/api/view",new Blob([JSON.stringify({page:"share",referrer:document.referrer||null})],{type:"application/json"}));' +
     'function openLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var i=document.createElement("img");i.src=s;i.onclick=function(e){e.stopPropagation()};l.appendChild(i);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}' +
     'var saveBtn=document.getElementById("saveSnipBtn");' +
     'if(saveBtn){saveBtn.onclick=function(){' +
