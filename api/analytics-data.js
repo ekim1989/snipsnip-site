@@ -189,11 +189,12 @@ module.exports = async (req, res) => {
       viral_coeff: { val: parseFloat(viralCoeff.toFixed(2)), target: 0.15, score: funnelScore(parseFloat(viralCoeff.toFixed(2)), 0.15) },
     };
 
-    // Market value estimate
-    var baseTech = 5000;
-    var userValue = mau * 20;
-    var revenueMultiple = mrr * 12 * 4;
-    var marketValue = baseTech + userValue + revenueMultiple;
+    // Market value estimate (minimum floor)
+    var arr = mrr * 12;
+    var multiple = arr >= 60000 ? 4.5 : arr >= 12000 ? 3.5 : 2.5;
+    var arrValuation = Math.round(arr * multiple);
+    var marketValue = Math.max(5000, arrValuation);
+    var bracket = arr >= 60000 ? '$60k+ ARR' : arr >= 12000 ? '$12k-$60k ARR' : arr < 1 ? 'pre-revenue' : 'under $12k ARR';
 
     res.status(200).json({
       kpi: {
@@ -258,10 +259,9 @@ module.exports = async (req, res) => {
       },
       valuation: {
         market_value: marketValue,
-        base_tech: baseTech,
-        user_value: userValue,
-        revenue_multiple: revenueMultiple,
-        mau_used: mau,
+        arr: arr,
+        multiple: multiple,
+        bracket: bracket,
         mrr_used: mrr,
       },
     });

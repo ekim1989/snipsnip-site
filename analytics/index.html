@@ -213,7 +213,7 @@
 
       <div class="sect" style="margin-top:32px">
         <div style="background:#18181b;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;text-align:center">
-          <div style="font-size:13px;color:#52525b;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px">Estimated SnipSnip market value <span class="tip">?<span class="tt"><strong>A fun but grounded estimate</strong> based on how micro-SaaS Chrome extensions actually get valued on marketplaces like Acquire.com and Flippa.<br><br><strong>Formula:</strong><br>Base tech: $5,000 (code, infrastructure, integrations)<br>+ User value: MAU x $20 (each active user has monetization potential)<br>+ Revenue: MRR x 12 x 4 (4x ARR, standard micro-SaaS multiple for under $1M ARR)<br><br>Pre-revenue projects typically sell for $1k-$5k. With $10k+ MRR and strong retention, micro-SaaS can command 3-5x ARR. This estimate grows as your product grows.</span></span></div>
+          <div style="font-size:13px;color:#52525b;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px">Estimated market value <span class="tip">?<span class="tt"><strong>The minimum you should accept if someone offers to buy SnipSnip.</strong> Based on how micro-SaaS Chrome extensions actually sell on Acquire.com and Flippa.<br><br><strong>Formula:</strong> ARR (MRR x 12) multiplied by a standard multiple based on your revenue bracket:<br><br>Pre-revenue: $5,000 floor (code + infrastructure + CWS listing)<br>Under $12k ARR: 2.5x ARR<br>$12k-$60k ARR: 3.5x ARR<br>$60k+ ARR: 4.5x ARR<br><br>A strategic buyer (competitor, company wanting your users) would typically pay 2-5x above this number. This is the cash flow floor, not the ceiling.</span></span></div>
           <div style="font-size:36px;font-weight:700;color:#22c55e" id="val-total">--</div>
           <div style="font-size:12px;color:#3f3f46;margin-top:8px" id="val-breakdown"></div>
         </div>
@@ -296,7 +296,7 @@
         engagement:{avg_snips:'5.9',avg_snips_active:'9.2',avg_shares:'0.8',avg_folders:'1.2'},
         health:{retention_d1:{val:68,target:50,score:3},retention_d7:{val:43,target:30,score:3},retention_d30:{val:29,target:20,score:3},stickiness:{val:22,target:15,score:3},funnel_landing_cta:{val:20,target:20,score:3},funnel_install_signup:{val:78,target:70,score:3},funnel_signup_snip:{val:86,target:80,score:3},funnel_free_pro:{val:7.1,target:3,score:3},monthly_uninstall:{val:5,target:5,score:3},viral_coeff:{val:0.13,target:0.15,score:2}},
         targets:{retention_d1:50,retention_d7:30,retention_d30:20,stickiness:15,funnel_landing_cta:20,funnel_install_signup:70,funnel_signup_snip:80,funnel_free_pro:3,monthly_uninstall:5,viral_coeff:0.15},
-        valuation:{market_value:6770,base_tech:5000,user_value:620,revenue_multiple:1152,mau_used:31,mrr_used:24}
+        valuation:{market_value:5000,arr:288,multiple:2.5,bracket:'under $12k ARR',mrr_used:24}
       };
       var labels=[];for(var i=29;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);labels.push((d.getMonth()+1)+'/'+d.getDate())}
       demo.daily.dates=labels;
@@ -451,7 +451,15 @@
       var v=d.valuation||{};
       if(v.market_value!==undefined){
         document.getElementById('val-total').textContent='$'+v.market_value.toLocaleString();
-        document.getElementById('val-breakdown').textContent='$'+v.base_tech.toLocaleString()+' base tech + '+v.mau_used+' MAU x $20 + $'+v.mrr_used+' MRR x 12 x 4';
+        var sub;
+        if(v.bracket === 'pre-revenue') {
+          sub = '$5,000 floor (pre-revenue)';
+        } else if(v.market_value <= 5000) {
+          sub = '$' + v.arr.toLocaleString() + ' ARR x ' + v.multiple + ' = $' + Math.round(v.arr * v.multiple).toLocaleString() + ' — $5,000 floor applied';
+        } else {
+          sub = '$' + v.mrr_used + ' MRR x 12 = $' + v.arr.toLocaleString() + ' ARR x ' + v.multiple + ' (' + v.bracket + ')';
+        }
+        document.getElementById('val-breakdown').textContent=sub;
       }
     }
 
