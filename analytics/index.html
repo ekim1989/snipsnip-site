@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnipSnip Analytics</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9986;&#65039;</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#09090b;color:#e4e4e7;font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;padding:24px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .logo{font-size:20px;font-weight:700;letter-spacing:-0.5px}.logo span{color:#ff4d4d}
+    .period{display:flex;gap:4px}
+    .period button{padding:6px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;color:#71717a;background:#18181b;font-family:inherit}
+    .period button.act{color:#e4e4e7;background:#27272a;border:1px solid rgba(255,255,255,0.1)}
+    .gate{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px}
+    .gate-logo{font-size:28px;font-weight:700;margin-bottom:8px}.gate-logo span{color:#ff4d4d}
+    .gate-sub{font-size:14px;color:#52525b;margin-bottom:24px}
+    .gate input{padding:10px 16px;background:#18181b;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:14px;font-family:inherit;width:260px;text-align:center;outline:none}
+    .gate input:focus{border-color:#ff4d4d}
+    .gate button{padding:10px 28px;background:#ff4d4d;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+    .gate button:hover{filter:brightness(0.9)}
+    .gate-err{font-size:13px;color:#ef4444;min-height:20px}
+    .demo-badge{display:inline-block;padding:4px 12px;background:rgba(255,77,77,0.1);color:#ff4d4d;font-size:11px;font-weight:600;border-radius:6px;margin-left:12px}
+    .live-badge{display:inline-block;padding:4px 12px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:11px;font-weight:600;border-radius:6px;margin-left:12px}
+    .dash{display:none}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#18181b;border-radius:10px;padding:16px}
+    .kpi-label{font-size:12px;color:#71717a;margin-bottom:4px}
+    .kpi-val{font-size:24px;font-weight:700}
+    .kpi-delta{font-size:11px;margin-top:2px}
+    .up{color:#22c55e}.flat{color:#52525b}.down{color:#ef4444}
+    .sect{margin-bottom:20px}
+    .sect-title{font-size:14px;font-weight:600;color:#71717a;margin-bottom:10px}
+    .card{background:#18181b;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px}
+    .card-title{font-size:13px;color:#71717a;margin-bottom:12px}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+    .row:last-child{border-bottom:none}
+    .row-label{color:#a1a1aa}
+    .row-val{font-weight:600}
+    .fn-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+    .fn-row:last-child{border-bottom:none}
+    .fn-step{font-size:13px;flex:1}
+    .fn-count{font-size:14px;font-weight:600;min-width:48px;text-align:right}
+    .fn-bar-wrap{flex:2;height:8px;background:#27272a;border-radius:4px;overflow:hidden}
+    .fn-bar{height:100%;border-radius:4px}
+    .fn-rate{font-size:11px;color:#52525b;min-width:48px;text-align:right}
+    .legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-size:12px;color:#a1a1aa}
+    .legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+    .tbl{width:100%;font-size:13px;border-collapse:collapse}
+    .tbl th{text-align:left;font-weight:400;color:#52525b;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px}
+    .tbl td{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+    .tbl td:last-child{text-align:right}
+    .pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+    .pill-pro{background:rgba(34,197,94,0.1);color:#22c55e}
+    .pill-free{background:rgba(255,255,255,0.06);color:#71717a}
+    .pill-yes{background:rgba(34,197,94,0.1);color:#22c55e}
+    .pill-no{background:rgba(239,68,68,0.1);color:#ef4444}
+    @media(max-width:768px){.kpi-row{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="gate" id="gate">
+      <div class="gate-logo">Snip<span>Snip</span></div>
+      <div class="gate-sub">Analytics Dashboard</div>
+      <input type="password" id="pw" placeholder="Enter password" autocomplete="off">
+      <button onclick="doAuth()">Access</button>
+      <div class="gate-err" id="gate-err"></div>
+      <div style="margin-top:16px"><button onclick="showDemo()" style="background:none;border:1px solid rgba(255,255,255,0.08);color:#71717a;padding:8px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">View demo</button></div>
+    </div>
+
+    <div class="dash" id="dash">
+      <div class="head">
+        <div><span class="logo">Snip<span>Snip</span></span> <span style="color:#71717a;font-size:14px;margin-left:8px">analytics</span><span id="modeBadge" class="demo-badge">Demo data</span></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Total users</div><div class="kpi-val" id="k-users">42</div><div class="kpi-delta up" id="k-users-d">+8 this week</div></div>
+        <div class="kpi"><div class="kpi-label">WAU (7-day active)</div><div class="kpi-val" id="k-wau">18</div><div class="kpi-delta flat" id="k-wau-d">43% of total</div></div>
+        <div class="kpi"><div class="kpi-label">MAU (30-day active)</div><div class="kpi-val" id="k-mau">31</div><div class="kpi-delta flat" id="k-mau-d">74% of total</div></div>
+        <div class="kpi"><div class="kpi-label">Stickiness (DAU/MAU)</div><div class="kpi-val" id="k-stick">22%</div><div class="kpi-delta up" id="k-stick-d">Healthy</div></div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Snips created</div><div class="kpi-val" id="k-snips">247</div><div class="kpi-delta up" id="k-snips-d">+63 this week</div></div>
+        <div class="kpi"><div class="kpi-label">Shares created</div><div class="kpi-val" id="k-shares">34</div><div class="kpi-delta up" id="k-shares-d">+12 this week</div></div>
+        <div class="kpi"><div class="kpi-label">MRR</div><div class="kpi-val" id="k-mrr">$24</div><div class="kpi-delta up" id="k-mrr-d">3 Pro users</div></div>
+        <div class="kpi"><div class="kpi-label">Uninstalls</div><div class="kpi-val" id="k-uninstalls">6</div><div class="kpi-delta down" id="k-uninstalls-d">14% churn</div></div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-title">Acquisition funnel</div>
+        <div class="card" id="funnel-card">
+          <div class="fn-row"><div class="fn-step">Landing page views</div><div class="fn-count" id="f-landing">312</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-landing" style="width:100%;background:#85B7EB"></div></div><div class="fn-rate"></div></div>
+          <div class="fn-row"><div class="fn-step">CTA clicks (to CWS)</div><div class="fn-count" id="f-cta">89</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-cta" style="width:28%;background:#85B7EB"></div></div><div class="fn-rate" id="fr-cta">28.5%</div></div>
+          <div class="fn-row"><div class="fn-step">Share page views</div><div class="fn-count" id="f-shareviews">186</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-shareviews" style="width:60%;background:#AFA9EC"></div></div><div class="fn-rate">separate</div></div>
+          <div class="fn-row"><div class="fn-step">"Save this snip" clicks</div><div class="fn-count" id="f-saveclicks">23</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-saveclicks" style="width:7%;background:#AFA9EC"></div></div><div class="fn-rate" id="fr-saveclicks">12.4%</div></div>
+          <div class="fn-row"><div class="fn-step">Installs (welcome page)</div><div class="fn-count" id="f-installs">54</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-installs" style="width:17%;background:#5DCAA5"></div></div><div class="fn-rate">all sources</div></div>
+          <div class="fn-row"><div class="fn-step">Sign-ups (accounts)</div><div class="fn-count" id="f-signups">42</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-signups" style="width:13%;background:#5DCAA5"></div></div><div class="fn-rate" id="fr-signups">77.8%</div></div>
+          <div class="fn-row"><div class="fn-step">First snip taken</div><div class="fn-count" id="f-firstsnip">36</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-firstsnip" style="width:12%;background:#1D9E75"></div></div><div class="fn-rate" id="fr-firstsnip">85.7%</div></div>
+          <div class="fn-row"><div class="fn-step">Pro conversions</div><div class="fn-count" id="f-pro">3</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-pro" style="width:1%;background:#7F77DD"></div></div><div class="fn-rate" id="fr-pro">7.1%</div></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-title">Growth (last 30 days)</div>
+        <div class="card">
+          <div class="legend">
+            <span><span class="legend-dot" style="background:#ff4d4d"></span>Snips/day</span>
+            <span><span class="legend-dot" style="background:#5DCAA5"></span>Shares/day</span>
+            <span><span class="legend-dot" style="background:#85B7EB"></span>New users/day</span>
+          </div>
+          <div style="position:relative;height:220px"><canvas id="growthChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="g2 sect">
+        <div class="card">
+          <div class="card-title">Retention</div>
+          <div class="row"><span class="row-label">Day 1</span><span class="row-val" id="r-d1">68%</span></div>
+          <div class="row"><span class="row-label">Day 7</span><span class="row-val" id="r-d7">43%</span></div>
+          <div class="row"><span class="row-label">Day 30</span><span class="row-val" id="r-d30">29%</span></div>
+          <div class="row" style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"><span class="row-label">At risk (7-14d inactive)</span><span class="row-val" style="color:#f59e0b" id="r-risk">5</span></div>
+          <div class="row"><span class="row-label">Churned (14d+ inactive)</span><span class="row-val" style="color:#ef4444" id="r-churned">3</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Feature adoption (% of users)</div>
+          <div class="row"><span class="row-label">Created a snip</span><span class="row-val" id="fa-snip">86%</span></div>
+          <div class="row"><span class="row-label">Used folders</span><span class="row-val" id="fa-folders">29%</span></div>
+          <div class="row"><span class="row-label">Shared a snip</span><span class="row-val" id="fa-shared">19%</span></div>
+          <div class="row"><span class="row-label">MCP API keys</span><span class="row-val" id="fa-mcp">2</span></div>
+          <div class="row"><span class="row-label">Viewed premium modal</span><span class="row-val" id="fa-nudge">40%</span></div>
+        </div>
+      </div>
+
+      <div class="g2 sect">
+        <div class="card">
+          <div class="card-title">Share page performance (viral loop)</div>
+          <div class="row"><span class="row-label">Share link views</span><span class="row-val" id="sp-views">186</span></div>
+          <div class="row"><span class="row-label">"Save this snip" clicks</span><span class="row-val" id="sp-saves">23</span></div>
+          <div class="row"><span class="row-label">-- Had extension</span><span class="row-val" style="color:#22c55e" id="sp-hasext">9</span></div>
+          <div class="row"><span class="row-label">-- Sent to CWS</span><span class="row-val" style="color:#3b82f6" id="sp-noext">14</span></div>
+          <div class="row"><span class="row-label">-- Deep link saves</span><span class="row-val" style="color:#8b5cf6" id="sp-deep">4</span></div>
+          <div class="row" style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"><span class="row-label">Viral coefficient</span><span class="row-val" id="sp-viral">0.13</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Revenue</div>
+          <div class="row"><span class="row-label">MRR</span><span class="row-val" id="rv-mrr">$24</span></div>
+          <div class="row"><span class="row-label">Active subscriptions</span><span class="row-val" id="rv-active">3</span></div>
+          <div class="row"><span class="row-label">Churned subs</span><span class="row-val" id="rv-churned">0</span></div>
+          <div class="row"><span class="row-label">ARPU</span><span class="row-val" id="rv-arpu">$0.57</span></div>
+          <div class="row"><span class="row-label">Free to Pro rate</span><span class="row-val" id="rv-conv">7.1%</span></div>
+          <div class="row"><span class="row-label">Nudge click rate</span><span class="row-val" id="rv-nudge">12%</span></div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-title">Power users (top 5 by snips)</div>
+        <div class="card"><table class="tbl" id="power-tbl">
+          <thead><tr><th>User</th><th>Snips</th><th>Tier</th><th style="text-align:right">Last active</th></tr></thead>
+          <tbody id="power-body">
+            <tr><td>nina@example.com</td><td>52</td><td><span class="pill pill-pro">pro</span></td><td>3h ago</td></tr>
+            <tr><td>sarah@example.com</td><td>34</td><td><span class="pill pill-pro">pro</span></td><td>2h ago</td></tr>
+            <tr><td>james@example.com</td><td>28</td><td><span class="pill pill-free">free</span></td><td>5h ago</td></tr>
+            <tr><td>priya@example.com</td><td>21</td><td><span class="pill pill-free">free</span></td><td>1d ago</td></tr>
+            <tr><td>alex@example.com</td><td>19</td><td><span class="pill pill-free">free</span></td><td>6h ago</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-title">Recent sign-ups</div>
+        <div class="card"><table class="tbl">
+          <thead><tr><th>Email</th><th>Signed up</th><th>Snips</th><th>First snip?</th><th>Tier</th><th style="text-align:right">Last active</th></tr></thead>
+          <tbody id="recent-body">
+            <tr><td>new1@gmail.com</td><td>Today</td><td>0</td><td><span class="pill pill-no">no</span></td><td><span class="pill pill-free">free</span></td><td>1h ago</td></tr>
+            <tr><td>new2@gmail.com</td><td>Today</td><td>3</td><td><span class="pill pill-yes">yes</span></td><td><span class="pill pill-free">free</span></td><td>30m ago</td></tr>
+            <tr><td>designer@co.com</td><td>Yesterday</td><td>7</td><td><span class="pill pill-yes">yes</span></td><td><span class="pill pill-free">free</span></td><td>4h ago</td></tr>
+            <tr><td>pm@company.com</td><td>Mar 27</td><td>14</td><td><span class="pill pill-yes">yes</span></td><td><span class="pill pill-pro">pro</span></td><td>2h ago</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="g2 sect">
+        <div class="card">
+          <div class="card-title">Uninstall reasons</div>
+          <div id="uninstall-list">
+            <div class="row"><span class="row-label">Found alternative</span><span class="row-val">3</span></div>
+            <div class="row"><span class="row-label">Didn't understand</span><span class="row-val">2</span></div>
+            <div class="row"><span class="row-label">Missing feature</span><span class="row-val">1</span></div>
+            <div class="row"><span class="row-label">Skipped</span><span class="row-val">4</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Engagement averages</div>
+          <div class="row"><span class="row-label">Avg snips/user</span><span class="row-val" id="eng-avg">5.9</span></div>
+          <div class="row"><span class="row-label">Avg snips/active user (7d)</span><span class="row-val" id="eng-active">9.2</span></div>
+          <div class="row"><span class="row-label">Avg shares/user</span><span class="row-val" id="eng-shares">0.8</span></div>
+          <div class="row"><span class="row-label">Avg folders/user</span><span class="row-val" id="eng-folders">1.2</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var growthChart = null;
+    var isLive = false;
+
+    function buildChart(labels, snips, shares, users) {
+      var ctx = document.getElementById('growthChart');
+      if (growthChart) growthChart.destroy();
+      growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {label:'Snips', data:snips, borderColor:'#ff4d4d', backgroundColor:'rgba(255,77,77,0.05)', fill:true, tension:0.3, pointRadius:0, pointHitRadius:8, borderWidth:2},
+            {label:'Shares', data:shares, borderColor:'#5DCAA5', backgroundColor:'rgba(93,202,165,0.05)', fill:true, tension:0.3, pointRadius:0, pointHitRadius:8, borderWidth:2},
+            {label:'New users', data:users, borderColor:'#85B7EB', backgroundColor:'rgba(133,183,235,0.05)', fill:true, tension:0.3, pointRadius:0, pointHitRadius:8, borderWidth:2}
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false, backgroundColor:'#18181b', titleColor:'#e4e4e7', bodyColor:'#a1a1aa', borderColor:'rgba(255,255,255,0.1)', borderWidth:1}},
+          scales:{x:{grid:{display:false}, ticks:{maxTicksLimit:8, font:{size:11}, color:'#52525b'}}, y:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{font:{size:11}, color:'#52525b'}}},
+          interaction:{mode:'index', intersect:false}
+        }
+      });
+    }
+
+    function showDemo() {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('dash').style.display = 'block';
+      document.getElementById('modeBadge').className = 'demo-badge';
+      document.getElementById('modeBadge').textContent = 'Demo data';
+      var labels = [];
+      for (var i=29;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);labels.push((d.getMonth()+1)+'/'+d.getDate())}
+      var snips=[2,3,1,5,4,6,3,8,5,7,4,9,6,8,5,11,7,10,8,12,9,6,13,10,14,8,15,11,16,18];
+      var shares=[0,1,0,1,1,2,1,2,1,3,1,2,2,3,1,2,3,2,2,4,2,1,3,2,4,2,3,3,5,4];
+      var users=[0,0,1,1,0,2,1,1,0,1,2,1,0,2,1,3,1,1,2,1,2,0,3,1,2,1,2,2,3,2];
+      buildChart(labels, snips, shares, users);
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return 'never';
+      var ms = Date.now() - new Date(iso).getTime();
+      var min = Math.floor(ms/60000);
+      if (min < 60) return min + 'm ago';
+      var hr = Math.floor(min/60);
+      if (hr < 24) return hr + 'h ago';
+      var d = Math.floor(hr/24);
+      return d + 'd ago';
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      var today = new Date();
+      var yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+      if (d.toDateString() === today.toDateString()) return 'Today';
+      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+      return (d.getMonth()+1) + '/' + d.getDate();
+    }
+
+    function pct(n, total) {
+      if (!total) return '0%';
+      return Math.round((n/total)*100) + '%';
+    }
+
+    function barWidth(n, max) {
+      if (!max) return '0%';
+      return Math.max(1, Math.round((n/max)*100)) + '%';
+    }
+
+    function updateDash(d) {
+      var k = d.kpi;
+      document.getElementById('k-users').textContent = k.total_users;
+      document.getElementById('k-users-d').textContent = '+' + k.snips_week + ' snips this week';
+      document.getElementById('k-wau').textContent = k.wau;
+      document.getElementById('k-wau-d').textContent = pct(k.wau, k.total_users) + ' of total';
+      document.getElementById('k-mau').textContent = k.mau;
+      document.getElementById('k-mau-d').textContent = pct(k.mau, k.total_users) + ' of total';
+      document.getElementById('k-stick').textContent = k.stickiness + '%';
+      document.getElementById('k-stick-d').textContent = k.stickiness >= 20 ? 'Healthy' : k.stickiness >= 10 ? 'Okay' : 'Low';
+      document.getElementById('k-stick-d').className = 'kpi-delta ' + (k.stickiness >= 20 ? 'up' : k.stickiness >= 10 ? 'flat' : 'down');
+      document.getElementById('k-snips').textContent = k.total_snips;
+      document.getElementById('k-snips-d').textContent = '+' + k.snips_week + ' this week';
+      document.getElementById('k-shares').textContent = k.total_shares;
+      document.getElementById('k-shares-d').textContent = '+' + k.shares_week + ' this week';
+      document.getElementById('k-mrr').textContent = '$' + k.mrr;
+      document.getElementById('k-mrr-d').textContent = k.pro_users + ' Pro user' + (k.pro_users !== 1 ? 's' : '');
+      document.getElementById('k-uninstalls').textContent = k.uninstalls;
+      document.getElementById('k-uninstalls-d').textContent = k.churn_rate + '% churn';
+
+      var f = d.funnel;
+      var fMax = Math.max(f.landing_views, f.share_views, 1);
+      document.getElementById('f-landing').textContent = f.landing_views;
+      document.getElementById('f-cta').textContent = f.cta_clicks;
+      document.getElementById('fb-cta').style.width = barWidth(f.cta_clicks, fMax);
+      document.getElementById('fr-cta').textContent = pct(f.cta_clicks, f.landing_views);
+      document.getElementById('f-shareviews').textContent = f.share_views;
+      document.getElementById('fb-shareviews').style.width = barWidth(f.share_views, fMax);
+      document.getElementById('f-saveclicks').textContent = f.save_clicks;
+      document.getElementById('fb-saveclicks').style.width = barWidth(f.save_clicks, fMax);
+      document.getElementById('fr-saveclicks').textContent = f.share_views > 0 ? pct(f.save_clicks, f.share_views) : '0%';
+      document.getElementById('f-installs').textContent = f.installs;
+      document.getElementById('fb-installs').style.width = barWidth(f.installs, fMax);
+      document.getElementById('f-signups').textContent = f.signups;
+      document.getElementById('fb-signups').style.width = barWidth(f.signups, fMax);
+      document.getElementById('fr-signups').textContent = f.installs > 0 ? pct(f.signups, f.installs) : 'n/a';
+      document.getElementById('f-firstsnip').textContent = f.first_snip;
+      document.getElementById('fb-firstsnip').style.width = barWidth(f.first_snip, fMax);
+      document.getElementById('fr-firstsnip').textContent = f.signups > 0 ? pct(f.first_snip, f.signups) : 'n/a';
+      document.getElementById('f-pro').textContent = f.pro;
+      document.getElementById('fb-pro').style.width = barWidth(f.pro, fMax);
+      document.getElementById('fr-pro').textContent = f.signups > 0 ? pct(f.pro, f.signups) : 'n/a';
+
+      buildChart(d.daily.dates, d.daily.snips, d.daily.shares, d.daily.users);
+
+      var r = d.retention;
+      document.getElementById('r-d1').textContent = r.d1 + '%';
+      document.getElementById('r-d7').textContent = r.d7 + '%';
+      document.getElementById('r-d30').textContent = r.d30 + '%';
+      document.getElementById('r-risk').textContent = r.at_risk;
+      document.getElementById('r-churned').textContent = r.churned;
+
+      var fa = d.features;
+      document.getElementById('fa-snip').textContent = fa.created_snip + '%';
+      document.getElementById('fa-folders').textContent = fa.used_folders + '%';
+      document.getElementById('fa-shared').textContent = fa.shared + '%';
+      document.getElementById('fa-mcp').textContent = fa.mcp_keys;
+      document.getElementById('fa-nudge').textContent = fa.nudge_shown > 0 ? fa.nudge_shown + ' shown' : '0';
+
+      var sp = d.share_perf;
+      document.getElementById('sp-views').textContent = sp.views;
+      document.getElementById('sp-saves').textContent = sp.save_clicks;
+      document.getElementById('sp-hasext').textContent = sp.has_ext;
+      document.getElementById('sp-noext').textContent = sp.no_ext;
+      document.getElementById('sp-deep').textContent = sp.deep_link;
+      document.getElementById('sp-viral').textContent = sp.viral_coeff;
+
+      var rv = d.revenue;
+      document.getElementById('rv-mrr').textContent = '$' + rv.mrr;
+      document.getElementById('rv-active').textContent = rv.active_subs;
+      document.getElementById('rv-churned').textContent = rv.churned_subs;
+      document.getElementById('rv-arpu').textContent = '$' + rv.arpu;
+      document.getElementById('rv-conv').textContent = rv.conversion + '%';
+      document.getElementById('rv-nudge').textContent = d.features.nudge_rate + '%';
+
+      var eng = d.engagement;
+      document.getElementById('eng-avg').textContent = eng.avg_snips;
+      document.getElementById('eng-active').textContent = eng.avg_snips_active;
+      document.getElementById('eng-shares').textContent = eng.avg_shares;
+      document.getElementById('eng-folders').textContent = eng.avg_folders;
+
+      var pb = document.getElementById('power-body');
+      pb.innerHTML = '';
+      (d.power_users || []).forEach(function(u) {
+        pb.innerHTML += '<tr><td>' + u.email + '</td><td>' + u.snips + '</td><td><span class="pill pill-' + u.tier + '">' + u.tier + '</span></td><td>' + timeAgo(u.last_active) + '</td></tr>';
+      });
+      if (!d.power_users || !d.power_users.length) pb.innerHTML = '<tr><td colspan="4" style="color:#52525b">No users yet</td></tr>';
+
+      var rb = document.getElementById('recent-body');
+      rb.innerHTML = '';
+      (d.recent_users || []).forEach(function(u) {
+        rb.innerHTML += '<tr><td>' + u.email + '</td><td>' + fmtDate(u.created_at) + '</td><td>' + u.snips + '</td><td><span class="pill pill-' + (u.has_snip ? 'yes' : 'no') + '">' + (u.has_snip ? 'yes' : 'no') + '</span></td><td><span class="pill pill-' + u.tier + '">' + u.tier + '</span></td><td>' + timeAgo(u.last_active) + '</td></tr>';
+      });
+      if (!d.recent_users || !d.recent_users.length) rb.innerHTML = '<tr><td colspan="6" style="color:#52525b">No users yet</td></tr>';
+
+      var ul = document.getElementById('uninstall-list');
+      var reasons = d.uninstall_reasons || {};
+      var rKeys = Object.keys(reasons).sort(function(a,b) { return reasons[b] - reasons[a]; });
+      if (rKeys.length) {
+        ul.innerHTML = '';
+        rKeys.forEach(function(k) { ul.innerHTML += '<div class="row"><span class="row-label">' + k.replace(/_/g,' ') + '</span><span class="row-val">' + reasons[k] + '</span></div>'; });
+      } else {
+        ul.innerHTML = '<div class="row"><span class="row-label" style="color:#52525b">No uninstall feedback yet</span></div>';
+      }
+    }
+
+    async function doAuth() {
+      var pw = document.getElementById('pw').value;
+      var err = document.getElementById('gate-err');
+      if (!pw) { err.textContent = 'Enter the password'; return; }
+      err.textContent = 'Loading...';
+      try {
+        var resp = await fetch('/api/analytics-data', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({password: pw})
+        });
+        if (resp.status === 401) { err.textContent = 'Wrong password'; return; }
+        if (!resp.ok) { err.textContent = 'Server error'; return; }
+        var data = await resp.json();
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('dash').style.display = 'block';
+        document.getElementById('modeBadge').className = 'live-badge';
+        document.getElementById('modeBadge').textContent = 'Live data';
+        isLive = true;
+        updateDash(data);
+      } catch(e) {
+        err.textContent = 'Connection error';
+      }
+    }
+
+    document.getElementById('pw').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doAuth();
+    });
+  </script>
+</body>
+</html>
