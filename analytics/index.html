@@ -280,7 +280,7 @@
     function updateDash(d) {
       var k = d.kpi;
       document.getElementById('k-users').textContent = k.total_users;
-      document.getElementById('k-users-d').textContent = '+' + k.snips_week + ' snips this week';
+      document.getElementById('k-users-d').textContent = '+' + k.users_week + ' this week';
       document.getElementById('k-wau').textContent = k.wau;
       document.getElementById('k-wau-d').textContent = pct(k.wau, k.total_users) + ' of total';
       document.getElementById('k-mau').textContent = k.mau;

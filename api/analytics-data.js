@@ -82,6 +82,7 @@ module.exports = async (req, res) => {
     var mau = profileList.filter(function(p) { return p.last_active_at && p.last_active_at >= d30; }).length;
     var dau = profileList.filter(function(p) { return p.last_active_at && p.last_active_at >= d1; }).length;
     var stickiness = mau > 0 ? Math.round((dau / mau) * 100) : 0;
+    var usersThisWeek = userList.filter(function(u) { return u.created_at && u.created_at >= d7; }).length;
 
     // Daily series (last 30 days)
     var dailyDates = [];
@@ -179,6 +180,7 @@ module.exports = async (req, res) => {
         shares_week: shareWeekList.length,
         mrr: mrr, pro_users: proUsers,
         uninstalls: uninstallList.length,
+        users_week: usersThisWeek,
         churn_rate: totalUsers > 0 ? Math.round((uninstallList.length / (totalUsers + uninstallList.length)) * 100) : 0,
       },
       funnel: {
