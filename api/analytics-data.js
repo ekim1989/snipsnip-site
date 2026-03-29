@@ -39,8 +39,8 @@ module.exports = async (req, res) => {
       sb('profiles?select=*'),
       sb('snips?select=id,user_id,created_at,folder_id&deleted=eq.false'),
       sb('snips?select=id&deleted=eq.false&created_at=gte.' + d7),
-      sb('shared_links?select=id,user_id,created_at'),
-      sb('shared_links?select=id&created_at=gte.' + d7),
+      sb('shared_links?select=id,user_id,created_at&source=eq.manual'),
+      sb('shared_links?select=id&created_at=gte.' + d7 + '&source=eq.manual'),
       sb('folders?select=id,user_id&deleted=eq.false'),
       sb('page_views?select=*&order=created_at.desc&limit=1000'),
       sb('cta_clicks?select=*&order=created_at.desc&limit=1000'),
@@ -189,6 +189,12 @@ module.exports = async (req, res) => {
       viral_coeff: { val: parseFloat(viralCoeff.toFixed(2)), target: 0.15, score: funnelScore(parseFloat(viralCoeff.toFixed(2)), 0.15) },
     };
 
+    // Market value estimate
+    var baseTech = 5000;
+    var userValue = mau * 20;
+    var revenueMultiple = mrr * 12 * 4;
+    var marketValue = baseTech + userValue + revenueMultiple;
+
     res.status(200).json({
       kpi: {
         total_users: totalUsers, wau: wau, mau: mau, dau: dau,
@@ -249,6 +255,14 @@ module.exports = async (req, res) => {
         stickiness: 15, funnel_landing_cta: 20, funnel_install_signup: 70,
         funnel_signup_snip: 80, funnel_free_pro: 3,
         monthly_uninstall: 5, viral_coeff: 0.15,
+      },
+      valuation: {
+        market_value: marketValue,
+        base_tech: baseTech,
+        user_value: userValue,
+        revenue_multiple: revenueMultiple,
+        mau_used: mau,
+        mrr_used: mrr,
       },
     });
   } catch (e) {
