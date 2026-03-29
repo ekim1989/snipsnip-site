@@ -42,11 +42,14 @@
     .row-target{font-size:11px;color:#52525b;margin-left:8px;font-weight:400}
     .fn-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
     .fn-row:last-child{border-bottom:none}
-    .fn-step{font-size:13px;flex:1}
+    .fn-step{font-size:13px;flex:1;display:flex;align-items:center;gap:5px}
     .fn-count{font-size:14px;font-weight:600;min-width:48px;text-align:right}
-    .fn-bar-wrap{flex:2;height:8px;background:#27272a;border-radius:4px;overflow:hidden}
-    .fn-bar{height:100%;border-radius:4px}
-    .fn-rate{font-size:11px;color:#52525b;min-width:48px;text-align:right}
+    .fn-bar-wrap{width:150px;flex-shrink:0;height:8px;background:#27272a;border-radius:4px;overflow:visible;position:relative}
+    .fn-bar{height:100%;border-radius:4px;max-width:100%}
+    .fn-target-line{position:absolute;top:-3px;width:2px;height:14px;background:rgba(255,255,255,0.3);border-radius:1px}
+    .fn-rate{font-size:13px;min-width:60px;text-align:right;font-weight:600}
+    .fn-arrow{color:#3f3f46;font-size:11px;padding:4px 0 4px 8px}
+    .fn-top{font-size:11px;color:#52525b;padding-left:8px}
     .legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-size:12px;color:#a1a1aa}
     .legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
     .tbl{width:100%;font-size:13px;border-collapse:collapse}
@@ -115,16 +118,14 @@
       </div>
 
       <div class="sect">
-        <div class="sect-title">Acquisition funnel <span class="tip">?<span class="tt"><strong>The journey from stranger to paying user.</strong> Each row shows a step, the count, and the conversion rate to the next step. The share page is tracked separately because it's a different entry point (people discovering SnipSnip through shared links rather than the landing page). Color-coded percentages show how each step compares to its target. Blue = landing page path. Purple = share/viral path. Green = install/signup path.</span></span></div>
+        <div class="sect-title">Acquisition funnel <span class="tip">?<span class="tt"><strong>Read this top to bottom.</strong> Each row is a gate in the journey from stranger to paying user. The "rate" column shows what % of people from the previous step made it through this gate. The bar fills toward the target rate. Green = healthy. Amber = needs attention. Red = broken, fix now. Two separate paths: the main funnel (landing page) and the viral funnel (share pages).</span></span></div>
         <div class="card">
-          <div class="fn-row"><div class="fn-step">Landing page views</div><div class="fn-count" id="f-landing">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-landing" style="width:100%;background:#85B7EB"></div></div><div class="fn-rate"></div></div>
-          <div class="fn-row"><div class="fn-step">CTA clicks (to CWS) <span class="tip">?<span class="tt">How many people clicked "Get SnipSnip" on the landing page and went to the Chrome Web Store. <strong>Target: 20% of landing views.</strong> A focused single-CTA page should convert 15-25%. Below 10% means the page isn't compelling or the CTA isn't clear enough. <span class="tt-target">Target: 20%</span></span></span></div><div class="fn-count" id="f-cta">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-cta" style="width:0%;background:#85B7EB"></div></div><div class="fn-rate" id="fr-cta"></div></div>
-          <div class="fn-row"><div class="fn-step">Share page views</div><div class="fn-count" id="f-shareviews">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-shareviews" style="width:0%;background:#AFA9EC"></div></div><div class="fn-rate">separate</div></div>
-          <div class="fn-row"><div class="fn-step">"Save this snip" clicks <span class="tip">?<span class="tt">Someone viewed a shared snip and wanted to keep it. If they have the extension, it saves instantly. If not, they're sent to the Chrome Web Store. This is your viral loop in action.</span></span></div><div class="fn-count" id="f-saveclicks">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-saveclicks" style="width:0%;background:#AFA9EC"></div></div><div class="fn-rate" id="fr-saveclicks"></div></div>
-          <div class="fn-row"><div class="fn-step">Installs (welcome page) <span class="tip">?<span class="tt">The welcome page opens automatically after someone installs SnipSnip. This counts ALL installs from ALL sources (landing page, Chrome Web Store search, share links, direct links). It's the most reliable install signal.</span></span></div><div class="fn-count" id="f-installs">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-installs" style="width:0%;background:#5DCAA5"></div></div><div class="fn-rate">all sources</div></div>
-          <div class="fn-row"><div class="fn-step">Sign-ups <span class="tip">?<span class="tt">People who signed in with Google after installing. <strong>Target: 70% of installs.</strong> Google OAuth is low friction, so this should be high. If it's low, the sign-in prompt might not be visible enough or people don't see the value of creating an account. <span class="tt-target">Target: 70%</span></span></span></div><div class="fn-count" id="f-signups">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-signups" style="width:0%;background:#5DCAA5"></div></div><div class="fn-rate" id="fr-signups"></div></div>
-          <div class="fn-row"><div class="fn-step">First snip taken <span class="tip">?<span class="tt"><strong>The activation moment.</strong> This is the most important conversion step. Someone who takes their first snip has experienced the core value. <strong>Target: 80% of sign-ups.</strong> If this is low, your onboarding is broken. People signed up but don't know what to do next. <span class="tt-target">Target: 80%</span></span></span></div><div class="fn-count" id="f-firstsnip">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-firstsnip" style="width:0%;background:#1D9E75"></div></div><div class="fn-rate" id="fr-firstsnip"></div></div>
-          <div class="fn-row"><div class="fn-step">Pro conversions <span class="tip">?<span class="tt"><strong>Target: 3% of total users.</strong> The freemium industry standard is 2-5%. Spotify converts around 3-4%, Dropbox around 2-4%. At $8/month, 3% is realistic. Below 2% means either the free tier is too generous or Pro doesn't feel valuable enough. Above 5% is exceptional. <span class="tt-target">Target: 3%</span></span></span></div><div class="fn-count" id="f-pro">--</div><div class="fn-bar-wrap"><div class="fn-bar" id="fb-pro" style="width:0%;background:#7F77DD"></div></div><div class="fn-rate" id="fr-pro"></div></div>
+          <div style="font-size:12px;color:#52525b;margin-bottom:12px;display:flex;justify-content:flex-end;gap:24px"><span>Count</span><span style="min-width:150px;text-align:center">Rate vs target</span><span style="min-width:60px;text-align:right">Rate</span></div>
+          <div id="funnel-main"></div>
+        </div>
+        <div class="card" style="margin-top:8px">
+          <div class="card-title">Viral path (share pages) <span class="tip">?<span class="tt"><strong>A separate entry point.</strong> People discover SnipSnip by viewing a shared snip, not from the landing page. This mini-funnel tracks how well those share pages convert viewers into users. This feeds into the main funnel at the "installs" step.</span></span></div>
+          <div id="funnel-viral"></div>
         </div>
       </div>
 
@@ -344,31 +345,47 @@
       unEl.textContent=k.churn_rate+'% monthly rate';
       unEl.className='kpi-delta '+(k.churn_rate<=5?'up':k.churn_rate<=8?'warn':'down');
 
-      var f=d.funnel,fMax=Math.max(f.landing_views,f.share_views,1);
-      document.getElementById('f-landing').textContent=f.landing_views;
-      document.getElementById('f-cta').textContent=f.cta_clicks;
-      document.getElementById('fb-cta').style.width=bw(f.cta_clicks,fMax);
-      var ctaPct=f.landing_views>0?Math.round((f.cta_clicks/f.landing_views)*100):0;
-      document.getElementById('fr-cta').innerHTML='<span class="'+sc(ctaPct,20)+'">'+ctaPct+'%</span>';
-      document.getElementById('f-shareviews').textContent=f.share_views;
-      document.getElementById('fb-shareviews').style.width=bw(f.share_views,fMax);
-      document.getElementById('f-saveclicks').textContent=f.save_clicks;
-      document.getElementById('fb-saveclicks').style.width=bw(f.save_clicks,fMax);
-      document.getElementById('fr-saveclicks').textContent=f.share_views>0?pct(f.save_clicks,f.share_views):'0%';
-      document.getElementById('f-installs').textContent=f.installs;
-      document.getElementById('fb-installs').style.width=bw(f.installs,fMax);
-      document.getElementById('f-signups').textContent=f.signups;
-      document.getElementById('fb-signups').style.width=bw(f.signups,fMax);
-      var suPct=f.installs>0?Math.round((f.signups/f.installs)*100):0;
-      document.getElementById('fr-signups').innerHTML='<span class="'+sc(suPct,70)+'">'+suPct+'%</span>';
-      document.getElementById('f-firstsnip').textContent=f.first_snip;
-      document.getElementById('fb-firstsnip').style.width=bw(f.first_snip,fMax);
-      var fsPct=f.signups>0?Math.round((f.first_snip/f.signups)*100):0;
-      document.getElementById('fr-firstsnip').innerHTML='<span class="'+sc(fsPct,80)+'">'+fsPct+'%</span>';
-      document.getElementById('f-pro').textContent=f.pro;
-      document.getElementById('fb-pro').style.width=bw(f.pro,fMax);
-      var prPct=f.signups>0?parseFloat(((f.pro/f.signups)*100).toFixed(1)):0;
-      document.getElementById('fr-pro').innerHTML='<span class="'+sc(prPct,3)+'">'+prPct+'%</span>';
+      var f=d.funnel;
+      function renderFunnelRow(container, label, count, rate, target, tooltip, color, isTop) {
+        var rateNum = rate !== null ? rate : null;
+        var barPct = (rateNum !== null && target > 0) ? Math.min(100, Math.round((rateNum / target) * 100)) : 0;
+        var colorClass = rateNum !== null ? sc(rateNum, target) : 'flat';
+        var barColor = colorClass === 'up' ? '#22c55e' : colorClass === 'warn' ? '#f59e0b' : colorClass === 'down' ? '#ef4444' : '#3f3f46';
+        var html = '';
+        if (!isTop) html += '<div class="fn-arrow">&#x2193;</div>';
+        html += '<div class="fn-row">';
+        html += '<div class="fn-step">' + label;
+        if (tooltip) html += ' <span class="tip">?<span class="tt">' + tooltip + '</span></span>';
+        html += '</div>';
+        html += '<div class="fn-count">' + count + '</div>';
+        if (rateNum !== null) {
+          html += '<div class="fn-bar-wrap"><div class="fn-bar" style="width:' + barPct + '%;background:' + barColor + '"></div>';
+          html += '<div class="fn-target-line" style="left:100%"></div></div>';
+          html += '<div class="fn-rate ' + colorClass + '">' + rateNum + '%</div>';
+          html += '<div class="fn-top">/ ' + target + '%</div>';
+        } else {
+          html += '<div class="fn-bar-wrap"></div><div class="fn-rate" style="color:#52525b">top</div><div class="fn-top"></div>';
+        }
+        html += '</div>';
+        container.innerHTML += html;
+      }
+      var mainEl = document.getElementById('funnel-main');
+      mainEl.innerHTML = '';
+      var ctaR = f.landing_views > 0 ? Math.round((f.cta_clicks/f.landing_views)*100) : 0;
+      var signR = f.installs > 0 ? Math.round((f.signups/f.installs)*100) : null;
+      var snipR = f.signups > 0 ? Math.round((f.first_snip/f.signups)*100) : 0;
+      var proR = f.signups > 0 ? parseFloat(((f.pro/f.signups)*100).toFixed(1)) : 0;
+      renderFunnelRow(mainEl, 'Landing page views', f.landing_views, null, 0, '<strong>Top of funnel.</strong> Total views of snipsnip.ai. This is everyone who found your site from any source (direct, search, social, referral). More views = more chances to convert.', '#85B7EB', true);
+      renderFunnelRow(mainEl, 'CTA clicks (to CWS)', f.cta_clicks, ctaR, 20, '<strong>What % of landing page visitors clicked "Get SnipSnip"?</strong> A focused single-CTA page should convert 15-25%. Below 10% means the page copy or design isn\'t compelling. Above 25% is excellent. <span class="tt-target">Target: 20% of landing views</span>', '#85B7EB', false);
+      renderFunnelRow(mainEl, 'Installs (welcome page)', f.installs, null, 0, '<strong>Total installs from ALL sources</strong> (landing page, Chrome Web Store search, share links, direct links). The welcome page opens automatically on first install, so this is the most reliable count. Can\'t calculate a rate here because installs come from multiple paths.', '#5DCAA5', false);
+      renderFunnelRow(mainEl, 'Sign-ups (accounts)', f.signups, signR, 70, '<strong>What % of people who installed also created an account?</strong> Google OAuth is low friction, so this should be high. If it\'s low, the sign-in prompt might not be visible enough or people don\'t understand why they need an account. <span class="tt-target">Target: 70% of installs</span>', '#5DCAA5', false);
+      renderFunnelRow(mainEl, 'First snip taken', f.first_snip, snipR, 80, '<strong>The activation moment.</strong> What % of signed-up users took their first snip? This is the most important gate. Someone who snips has experienced the core value. If this is low, your onboarding is failing. People signed up but don\'t know what to do. <span class="tt-target">Target: 80% of sign-ups</span>', '#1D9E75', false);
+      renderFunnelRow(mainEl, 'Pro conversions', f.pro, proR, 3, '<strong>What % of users are paying?</strong> Freemium standard is 2-5%. Spotify ~3-4%, Dropbox ~2-4%. Below 2% means free tier is too generous or Pro doesn\'t feel worth $8/mo. Above 5% is exceptional. <span class="tt-target">Target: 3% of total users</span>', '#7F77DD', false);
+      var viralEl = document.getElementById('funnel-viral');
+      viralEl.innerHTML = '';
+      var saveR = f.share_views > 0 ? Math.round((f.save_clicks/f.share_views)*100) : null;
+      renderFunnelRow(viralEl, 'Share page views', f.share_views, null, 0, '<strong>How many people viewed a shared snip.</strong> Each view is a potential new user discovering SnipSnip through someone else\'s share link. This number grows as your existing users share more.', '#AFA9EC', true);
+      renderFunnelRow(viralEl, '"Save this snip" clicks', f.save_clicks, saveR, 15, '<strong>What % of share page viewers wanted to keep the snip?</strong> This measures how compelling the shared content is. If this is low, the share page might need a stronger call-to-action or better preview. <span class="tt-target">Target: 15% of share views</span>', '#AFA9EC', false);
 
       buildChart(d.daily.dates,d.daily.snips,d.daily.shares,d.daily.users);
 
