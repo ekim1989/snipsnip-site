@@ -409,29 +409,7 @@
       var saveR = f.share_views > 0 ? Math.round((f.save_clicks/f.share_views)*100) : null;
       renderFunnelRow(viralEl, 'Share page views', f.share_views, null, 0, '<strong>How many people viewed a shared snip.</strong> Each view is a potential new user discovering SnipSnip through someone else\'s share link.', '#AFA9EC', true);
       renderFunnelRow(viralEl, '"Save this snip" clicks', f.save_clicks, saveR, 15, '<strong>What % of share page viewers wanted to keep the snip?</strong> If they have the extension, it saves instantly. If not, they\'re sent to the Chrome Web Store. <span class="tt-target">Target: 15% of share views</span>', '#AFA9EC', false);
-        var rateNum = rate !== null ? rate : null;
-        var barPct = (rateNum !== null && target > 0) ? Math.min(100, Math.round((rateNum / target) * 100)) : 0;
-        var colorClass = rateNum !== null ? sc(rateNum, target) : 'flat';
-        var barColor = colorClass === 'up' ? '#22c55e' : colorClass === 'warn' ? '#f59e0b' : colorClass === 'down' ? '#ef4444' : '#3f3f46';
-        var html = '';
-        if (!isTop) html += '<div class="fn-arrow">&#x2193;</div>';
-        html += '<div class="fn-row">';
-        html += '<div class="fn-step">' + label;
-        if (tooltip) html += ' <span class="tip">?<span class="tt">' + tooltip + '</span></span>';
-        html += '</div>';
-        html += '<div class="fn-count">' + count + '</div>';
-        if (rateNum !== null) {
-          html += '<div class="fn-bar-wrap"><div class="fn-bar" style="width:' + barPct + '%;background:' + barColor + '"></div>';
-          html += '<div class="fn-target-line" style="left:100%"></div></div>';
-          html += '<div class="fn-rate ' + colorClass + '">' + rateNum + '%</div>';
-          html += '<div class="fn-top">/ ' + target + '%</div>';
-        } else {
-          html += '<div class="fn-bar-wrap"></div><div class="fn-rate" style="color:#52525b">' + (isTop ? 'top' : 'n/a') + '</div><div class="fn-top"></div>';
-        }
-        html += '</div>';
-        container.innerHTML += html;
-      }
-      var mainEl = document.getElementById('funnel-main');
+
       buildChart(d.daily.dates,d.daily.snips,d.daily.shares,d.daily.users);
 
       var r=d.retention;
