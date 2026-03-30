@@ -220,6 +220,19 @@
         </div>
       </div>
 
+      <div class="sect">
+        <div class="sect-title">Campaign calculator <span class="tip">?<span class="tt"><strong>Forecast outcomes from a marketing push.</strong> Enter how many people you expect to reach. The calculator uses your current funnel rates to project results. If you don't have enough real data yet, it uses target rates. As real users flow through the funnel, the rates automatically update to reflect actual performance. Also helps you figure out how much you can spend on ads to hit a desired outcome.</span></span></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <span style="font-size:13px;color:#a1a1aa">If I drive</span>
+            <input type="number" id="calc-input" value="1000" min="1" style="width:110px;padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600">
+            <span style="font-size:13px;color:#a1a1aa">people to SnipSnip...</span>
+          </div>
+          <div id="calc-results"></div>
+          <div style="font-size:11px;color:#3f3f46;margin-top:12px" id="calc-rates"></div>
+        </div>
+      </div>
+
       <div class="sect" style="margin-top:32px">
         <div style="background:#18181b;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;text-align:center">
           <div style="font-size:13px;color:#52525b;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px">Estimated market value <span class="tip">?<span class="tt"><strong>The minimum you should accept if someone offers to buy SnipSnip.</strong> Based on how micro-SaaS Chrome extensions actually sell on Acquire.com and Flippa.<br><br><strong>Formula:</strong> ARR (MRR x 12) multiplied by a standard multiple based on your revenue bracket:<br><br>Pre-revenue: $5,000 floor (code + infrastructure + CWS listing)<br>Under $12k ARR: 2.5x ARR<br>$12k-$60k ARR: 3.5x ARR<br>$60k+ ARR: 4.5x ARR<br><br>A strategic buyer (competitor, company wanting your users) would typically pay 2-5x above this number. This is the cash flow floor, not the ceiling.</span></span></div>
@@ -475,6 +488,38 @@
         }
         document.getElementById('val-breakdown').textContent=sub;
       }
+
+      // Campaign calculator
+      var calcFunnel = d.funnel;
+      var calcTargets = d.targets;
+      var rInstallRate = 0.35;
+      var rSignup = calcFunnel.installs >= 5 ? calcFunnel.signups / calcFunnel.installs : calcTargets.funnel_install_signup / 100;
+      var rActivation = calcFunnel.signups >= 5 ? calcFunnel.first_snip / calcFunnel.signups : calcTargets.funnel_signup_snip / 100;
+      var rPro = d.kpi.total_users >= 20 ? d.kpi.pro_users / d.kpi.total_users : calcTargets.funnel_free_pro / 100;
+
+      function runCalc() {
+        var traffic = parseInt(document.getElementById('calc-input').value) || 0;
+        var installs = Math.round(traffic * rInstallRate);
+        var signups = Math.round(installs * rSignup);
+        var activated = Math.round(signups * rActivation);
+        var pro = Math.round(signups * rPro);
+        var addMrr = pro * 8;
+        var results = document.getElementById('calc-results');
+        results.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Installs</div><div style="font-size:22px;font-weight:700;color:#5DCAA5">' + installs.toLocaleString() + '</div></div>' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Sign-ups</div><div style="font-size:22px;font-weight:700;color:#5DCAA5">' + signups.toLocaleString() + '</div></div>' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Activated</div><div style="font-size:22px;font-weight:700;color:#1D9E75">' + activated.toLocaleString() + '</div></div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Pro converts</div><div style="font-size:22px;font-weight:700;color:#7F77DD">' + pro.toLocaleString() + '</div></div>' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Additional MRR</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + addMrr.toLocaleString() + '</div></div>' +
+          '</div>';
+        var usingReal = calcFunnel.installs >= 5;
+        document.getElementById('calc-rates').textContent = 'Rates: Install ' + Math.round(rInstallRate*100) + '% > Sign-up ' + Math.round(rSignup*100) + '% > Activation ' + Math.round(rActivation*100) + '% > Pro ' + (rPro*100).toFixed(1) + '%' + (usingReal ? '' : '  (using target rates until more data)');
+      }
+
+      document.getElementById('calc-input').addEventListener('input', runCalc);
+      runCalc();
     }
 
     async function doAuth() {
