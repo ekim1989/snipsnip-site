@@ -221,15 +221,22 @@
       </div>
 
       <div class="sect">
-        <div class="sect-title">Campaign calculator <span class="tip">?<span class="tt"><strong>Forecast outcomes from a marketing push.</strong> Enter how many people you expect to reach. The calculator uses your current funnel rates to project results. If you don't have enough real data yet, it uses target rates. As real users flow through the funnel, the rates automatically update to reflect actual performance. Also helps you figure out how much you can spend on ads to hit a desired outcome.</span></span></div>
+        <div class="sect-title">Campaign calculator <span class="tip">?<span class="tt"><strong>Should I spend money on this campaign?</strong> Enter how many people you expect to reach and how much it costs. The calculator projects how many Pro users and MRR you'll get, then tells you if it's worth the spend.<br><br><strong>How to read the ROI:</strong><br>12-month revenue = your new MRR x 12 months<br>12-month profit = revenue minus your spend<br>Return multiple = revenue divided by spend (2.0x means you doubled your money)<br>Breakeven = months until the MRR pays back the spend<br><br><strong>Rule of thumb:</strong> Breakeven under 3 months = strong yes. 3-6 months = probably worth it. Over 6 months = risky. Over 12 months = don't do it.<br><br>Toggle "Targets" to plan with benchmark rates before you have real data.</span></span></div>
         <div class="card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-            <span style="font-size:13px;color:#a1a1aa">If I drive</span>
-            <input type="number" id="calc-input" value="1000" min="1" style="width:110px;padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600">
-            <span style="font-size:13px;color:#a1a1aa">people to SnipSnip...</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <span style="font-size:12px;color:#71717a">Use rates from:</span>
+            <button id="calc-mode-live" onclick="setCalcMode('live')" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:#27272a;color:#22c55e;cursor:pointer;font-family:inherit;font-weight:600">Live data</button>
+            <button id="calc-mode-target" onclick="setCalcMode('target')" style="padding:5px 12px;font-size:12px;border-radius:6px;border:none;background:transparent;color:#52525b;cursor:pointer;font-family:inherit">Targets</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+            <span style="font-size:13px;color:#a1a1aa">Traffic:</span>
+            <input type="number" id="calc-traffic" value="1000" min="0" style="width:100px;padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600">
+            <span style="font-size:13px;color:#a1a1aa;margin-left:8px">Spend:</span>
+            <div style="display:flex;align-items:center;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0 12px"><span style="color:#52525b;font-size:14px">$</span><input type="number" id="calc-spend" value="0" min="0" style="width:80px;padding:8px 4px;background:transparent;border:none;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600"></div>
           </div>
           <div id="calc-results"></div>
-          <div style="font-size:11px;color:#3f3f46;margin-top:12px" id="calc-rates"></div>
+          <div id="calc-roi" style="margin-top:12px"></div>
+          <div style="font-size:11px;color:#3f3f46;margin-top:10px" id="calc-rates"></div>
         </div>
       </div>
 
@@ -490,35 +497,102 @@
       }
 
       // Campaign calculator
-      var calcFunnel = d.funnel;
-      var calcTargets = d.targets;
-      var rInstallRate = 0.35;
-      var rSignup = calcFunnel.installs >= 5 ? calcFunnel.signups / calcFunnel.installs : calcTargets.funnel_install_signup / 100;
-      var rActivation = calcFunnel.signups >= 5 ? calcFunnel.first_snip / calcFunnel.signups : calcTargets.funnel_signup_snip / 100;
-      var rPro = d.kpi.total_users >= 20 ? d.kpi.pro_users / d.kpi.total_users : calcTargets.funnel_free_pro / 100;
-
+      var cf = d.funnel;
+      var ck = d.kpi;
+      var ct = d.targets;
+      var liveSignup = cf.installs > 0 ? cf.signups / cf.installs : null;
+      var liveActivation = cf.signups > 0 ? cf.first_snip / cf.signups : null;
+      var livePro = ck.total_users > 0 ? ck.pro_users / ck.total_users : null;
+      var targetSignup = ct.funnel_install_signup / 100;
+      var targetActivation = ct.funnel_signup_snip / 100;
+      var targetPro = ct.funnel_free_pro / 100;
+      var calcMode = 'live';
+      window.setCalcMode = function(mode) {
+        calcMode = mode;
+        var lb = document.getElementById('calc-mode-live');
+        var tb = document.getElementById('calc-mode-target');
+        lb.style.color = mode === 'live' ? '#22c55e' : '#52525b';
+        lb.style.background = mode === 'live' ? '#27272a' : 'transparent';
+        lb.style.border = mode === 'live' ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent';
+        tb.style.color = mode === 'target' ? '#f59e0b' : '#52525b';
+        tb.style.background = mode === 'target' ? '#27272a' : 'transparent';
+        tb.style.border = mode === 'target' ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent';
+        runCalc();
+      };
       function runCalc() {
-        var traffic = parseInt(document.getElementById('calc-input').value) || 0;
-        var installs = Math.round(traffic * rInstallRate);
-        var signups = Math.round(installs * rSignup);
-        var activated = Math.round(signups * rActivation);
-        var pro = Math.round(signups * rPro);
+        var traffic = parseInt(document.getElementById('calc-traffic').value) || 0;
+        var spend = parseInt(document.getElementById('calc-spend').value) || 0;
+        var rI = 0.35;
+        var rS, rA, rP, labels;
+        if (calcMode === 'target') {
+          rS = targetSignup; rA = targetActivation; rP = targetPro;
+          labels = ['35%','70%','80%','3.0%'];
+        } else {
+          rS = liveSignup !== null ? liveSignup : targetSignup;
+          rA = liveActivation !== null ? liveActivation : targetActivation;
+          rP = livePro !== null ? livePro : targetPro;
+          labels = ['35%',
+            (liveSignup !== null ? Math.round(liveSignup*100) : Math.round(targetSignup*100)) + '%' + (liveSignup === null ? '*' : ''),
+            (liveActivation !== null ? Math.round(liveActivation*100) : Math.round(targetActivation*100)) + '%' + (liveActivation === null ? '*' : ''),
+            (livePro !== null ? (livePro*100).toFixed(1) : (targetPro*100).toFixed(1)) + '%' + (livePro === null ? '*' : '')
+          ];
+        }
+        var installs = Math.round(traffic * rI);
+        var signups = Math.round(installs * rS);
+        var activated = Math.round(signups * rA);
+        var pro = Math.round(signups * rP);
         var addMrr = pro * 8;
-        var results = document.getElementById('calc-results');
-        results.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
+        document.getElementById('calc-results').innerHTML =
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Installs</div><div style="font-size:22px;font-weight:700;color:#5DCAA5">' + installs.toLocaleString() + '</div></div>' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Sign-ups</div><div style="font-size:22px;font-weight:700;color:#5DCAA5">' + signups.toLocaleString() + '</div></div>' +
-          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Activated</div><div style="font-size:22px;font-weight:700;color:#1D9E75">' + activated.toLocaleString() + '</div></div>' +
-          '</div>' +
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Activated</div><div style="font-size:22px;font-weight:700;color:#1D9E75">' + activated.toLocaleString() + '</div></div></div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Pro converts</div><div style="font-size:22px;font-weight:700;color:#7F77DD">' + pro.toLocaleString() + '</div></div>' +
-          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Additional MRR</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + addMrr.toLocaleString() + '</div></div>' +
-          '</div>';
-        var usingReal = calcFunnel.installs >= 5;
-        document.getElementById('calc-rates').textContent = 'Rates: Install ' + Math.round(rInstallRate*100) + '% > Sign-up ' + Math.round(rSignup*100) + '% > Activation ' + Math.round(rActivation*100) + '% > Pro ' + (rPro*100).toFixed(1) + '%' + (usingReal ? '' : '  (using target rates until more data)');
+          '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Additional MRR</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + addMrr.toLocaleString() + '</div></div></div>';
+        var roiEl = document.getElementById('calc-roi');
+        if (spend > 0 && addMrr > 0) {
+          var months = Math.ceil(spend / addMrr);
+          var rev12 = addMrr * 12;
+          var profit12 = rev12 - spend;
+          var roiPct = Math.round((profit12 / spend) * 100);
+          var multiple = (rev12 / spend).toFixed(1);
+          var cpi = (spend / Math.max(installs,1)).toFixed(2);
+          var cpPro = pro > 0 ? Math.round(spend / pro) : 0;
+          var beColor = months <= 3 ? '#22c55e' : months <= 6 ? '#f59e0b' : '#ef4444';
+          var profitColor = profit12 >= 0 ? '#22c55e' : '#ef4444';
+          var verdict, verdictColor;
+          if (months <= 3) { verdict = 'Strong yes'; verdictColor = '#22c55e'; }
+          else if (months <= 6) { verdict = 'Probably worth it'; verdictColor = '#f59e0b'; }
+          else if (months <= 12) { verdict = 'Risky'; verdictColor = '#f59e0b'; }
+          else { verdict = 'Not worth it'; verdictColor = '#ef4444'; }
+          roiEl.innerHTML =
+            '<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">' +
+            '<div style="font-size:13px;color:#71717a;margin-bottom:12px">ROI analysis on $' + spend.toLocaleString() + ' spend</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
+            '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">12-month revenue</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + rev12.toLocaleString() + '</div></div>' +
+            '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">12-month profit</div><div style="font-size:22px;font-weight:700;color:' + profitColor + '">' + (profit12 >= 0 ? '+' : '') + '$' + profit12.toLocaleString() + '</div></div>' +
+            '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Return multiple</div><div style="font-size:22px;font-weight:700;color:' + profitColor + '">' + multiple + 'x</div></div>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
+            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Breakeven</div><div style="font-size:16px;font-weight:700;color:' + beColor + '">' + months + ' mo</div></div>' +
+            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">ROI</div><div style="font-size:16px;font-weight:700;color:' + profitColor + '">' + (roiPct >= 0 ? '+' : '') + roiPct + '%</div></div>' +
+            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Cost/install</div><div style="font-size:16px;font-weight:700;color:#e4e4e7">$' + cpi + '</div></div>' +
+            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Cost/Pro user</div><div style="font-size:16px;font-weight:700;color:#e4e4e7">$' + (cpPro > 0 ? cpPro : 'n/a') + '</div></div>' +
+            '</div>' +
+            '<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:' + verdictColor + '15;border:1px solid ' + verdictColor + '30;display:flex;align-items:center;gap:8px">' +
+            '<div style="font-size:14px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>' +
+            '<div style="font-size:12px;color:#a1a1aa">You spend $' + spend.toLocaleString() + ', get $' + addMrr.toLocaleString() + '/mo in MRR, earn it back in ' + months + ' month' + (months !== 1 ? 's' : '') + ', then profit $' + Math.round(addMrr).toLocaleString() + '/mo after that.</div>' +
+            '</div></div>';
+        } else if (spend > 0 && addMrr === 0) {
+          roiEl.innerHTML = '<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15)"><div style="font-size:14px;font-weight:700;color:#ef4444">Not worth it</div><div style="font-size:12px;color:#a1a1aa;margin-top:2px">At current Pro conversion rate (0%), this spend would generate $0 MRR. No return on investment. Focus on improving conversion before spending on ads.</div></div>';
+        } else { roiEl.innerHTML = ''; }
+        var modeLabel = calcMode === 'target' ? 'target rates' : 'live data';
+        var hasStars = calcMode === 'live' && (liveSignup === null || liveActivation === null || livePro === null);
+        document.getElementById('calc-rates').textContent = 'Rates (' + modeLabel + '): Install ' + labels[0] + ' > Sign-up ' + labels[1] + ' > Activation ' + labels[2] + ' > Pro ' + labels[3] + (hasStars ? '  (* = no live data, using target)' : '');
       }
-
-      document.getElementById('calc-input').addEventListener('input', runCalc);
+      document.getElementById('calc-traffic').addEventListener('input', runCalc);
+      document.getElementById('calc-spend').addEventListener('input', runCalc);
       runCalc();
     }
 
