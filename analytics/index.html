@@ -221,19 +221,31 @@
       </div>
 
       <div class="sect">
-        <div class="sect-title">Campaign calculator <span class="tip">?<span class="tt"><strong>Should I spend money on this campaign?</strong> Enter how many people you expect to reach and how much it costs. The calculator projects how many Pro users and MRR you'll get, then tells you if it's worth the spend.<br><br><strong>How to read the ROI:</strong><br>12-month revenue = your new MRR x 12 months<br>12-month profit = revenue minus your spend<br>Return multiple = revenue divided by spend (2.0x means you doubled your money)<br>Breakeven = months until the MRR pays back the spend<br><br><strong>Rule of thumb:</strong> Breakeven under 3 months = strong yes. 3-6 months = probably worth it. Over 6 months = risky. Over 12 months = don't do it.<br><br>Toggle "Targets" to plan with benchmark rates before you have real data.</span></span></div>
+        <div class="sect-title">Campaign calculator <span class="tip">?<span class="tt"><strong>Should I spend money on this campaign?</strong> Pick the channel, enter impressions (eyeballs), spend, and Pro lifespan. The calculator estimates installs, sign-ups, Pro converts, MRR, and full ROI.<br><br>Each channel has a different impression-to-install rate based on industry benchmarks. YouTube viewers rarely click description links (~2% CTR). Product Hunt users actively try new tools (~3% end-to-end). The channel you pick determines the first conversion step.<br><br><strong>Rule of thumb:</strong> Breakeven under 3 months = strong yes. 3-6 months = probably worth it. Over 6 months = risky. Over 12 = don't do it.<br><br>Toggle "Targets" to plan with benchmark funnel rates before you have real data.</span></span></div>
         <div class="card">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-            <span style="font-size:12px;color:#71717a">Use rates from:</span>
+            <span style="font-size:12px;color:#71717a">Funnel rates:</span>
             <button id="calc-mode-live" onclick="setCalcMode('live')" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:#27272a;color:#22c55e;cursor:pointer;font-family:inherit;font-weight:600">Live data</button>
             <button id="calc-mode-target" onclick="setCalcMode('target')" style="padding:5px 12px;font-size:12px;border-radius:6px;border:none;background:transparent;color:#52525b;cursor:pointer;font-family:inherit">Targets</button>
           </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <span style="font-size:13px;color:#a1a1aa">Channel:</span>
+            <select id="calc-channel" style="padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:13px;font-family:inherit;outline:none;cursor:pointer">
+              <option value="youtube">YouTube influencer</option>
+              <option value="reddit">Reddit ads</option>
+              <option value="twitter">Twitter/X organic</option>
+              <option value="producthunt">Product Hunt</option>
+              <option value="blog">Blog/SEO</option>
+              <option value="cws">Direct CWS visitors</option>
+            </select>
+            <span style="font-size:11px;color:#52525b" id="calc-channel-note"></span>
+          </div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-            <span style="font-size:13px;color:#a1a1aa">Traffic:</span>
-            <input type="number" id="calc-traffic" value="1000" min="0" style="width:100px;padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600">
-            <span style="font-size:13px;color:#a1a1aa;margin-left:8px">Spend:</span>
+            <span style="font-size:13px;color:#a1a1aa">Impressions:</span>
+            <input type="number" id="calc-traffic" value="10000" min="0" style="width:110px;padding:8px 12px;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600">
+            <span style="font-size:13px;color:#a1a1aa;margin-left:4px">Spend:</span>
             <div style="display:flex;align-items:center;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0 12px"><span style="color:#52525b;font-size:14px">$</span><input type="number" id="calc-spend" value="0" min="0" style="width:80px;padding:8px 4px;background:transparent;border:none;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600"></div>
-            <span style="font-size:13px;color:#a1a1aa;margin-left:8px">Pro lifespan: <span class="tip">?<span class="tt"><strong>How many months the average Pro user stays subscribed before canceling.</strong> This is based on monthly churn rate: lifespan = 1 / churn rate. At 5% monthly churn (typical for $8/mo prosumer SaaS), average lifespan is 20 months. Early-stage products see higher churn (~7%), so 14 months is a conservative default. Adjust this as you get real churn data from Stripe.</span></span></span>
+            <span style="font-size:13px;color:#a1a1aa;margin-left:4px">Pro lifespan: <span class="tip">?<span class="tt"><strong>How many months the average Pro user stays before canceling.</strong> Based on monthly churn: lifespan = 1 / churn rate. At 5% monthly churn (typical for $8/mo prosumer SaaS), lifespan is 20 months. Early-stage sees higher churn (~7%), so 14 months is conservative. Adjust as you get real Stripe data.</span></span></span>
             <div style="display:flex;align-items:center;background:#27272a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0 8px"><input type="number" id="calc-lifespan" value="14" min="1" max="60" style="width:50px;padding:8px 4px;background:transparent;border:none;color:#e4e4e7;font-size:15px;font-family:inherit;text-align:center;outline:none;font-weight:600"><span style="color:#52525b;font-size:12px">mo</span></div>
           </div>
           <div id="calc-results"></div>
@@ -508,6 +520,17 @@
       var targetSignup = ct.funnel_install_signup / 100;
       var targetActivation = ct.funnel_signup_snip / 100;
       var targetPro = ct.funnel_free_pro / 100;
+
+      // Channel rates: impression to install (end-to-end)
+      var channels = {
+        youtube: {rate:0.004, label:'YouTube influencer', note:'~2% click description link x ~20% CWS install'},
+        reddit: {rate:0.001, label:'Reddit ads', note:'~0.5% CTR x ~20% CWS install'},
+        twitter: {rate:0.003, label:'Twitter/X organic', note:'~1.5% link CTR x ~20% CWS install'},
+        producthunt: {rate:0.03, label:'Product Hunt', note:'High-intent audience actively trying tools'},
+        blog: {rate:0.004, label:'Blog/SEO', note:'~2% in-article CTA click x ~20% CWS install'},
+        cws: {rate:0.20, label:'Direct CWS visitors', note:'Already on your listing page, ~20% install'}
+      };
+
       var calcMode = 'live';
       window.setCalcMode = function(mode) {
         calcMode = mode;
@@ -521,29 +544,34 @@
         tb.style.border = mode === 'target' ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent';
         runCalc();
       };
+
       function runCalc() {
-        var traffic = parseInt(document.getElementById('calc-traffic').value) || 0;
+        var impressions = parseInt(document.getElementById('calc-traffic').value) || 0;
         var spend = parseInt(document.getElementById('calc-spend').value) || 0;
-        var rI = 0.35;
-        var rS, rA, rP, labels;
+        var ch = channels[document.getElementById('calc-channel').value] || channels.youtube;
+        document.getElementById('calc-channel-note').textContent = ch.note;
+
+        var rS, rA, rP, funnelLabels;
         if (calcMode === 'target') {
           rS = targetSignup; rA = targetActivation; rP = targetPro;
-          labels = ['35%','70%','80%','3.0%'];
+          funnelLabels = ['70%','80%','3.0%'];
         } else {
           rS = liveSignup !== null ? liveSignup : targetSignup;
           rA = liveActivation !== null ? liveActivation : targetActivation;
           rP = livePro !== null ? livePro : targetPro;
-          labels = ['35%',
+          funnelLabels = [
             (liveSignup !== null ? Math.round(liveSignup*100) : Math.round(targetSignup*100)) + '%' + (liveSignup === null ? '*' : ''),
             (liveActivation !== null ? Math.round(liveActivation*100) : Math.round(targetActivation*100)) + '%' + (liveActivation === null ? '*' : ''),
             (livePro !== null ? (livePro*100).toFixed(1) : (targetPro*100).toFixed(1)) + '%' + (livePro === null ? '*' : '')
           ];
         }
-        var installs = Math.round(traffic * rI);
+
+        var installs = Math.round(impressions * ch.rate);
         var signups = Math.round(installs * rS);
         var activated = Math.round(signups * rA);
         var pro = Math.round(signups * rP);
         var addMrr = pro * 8;
+
         document.getElementById('calc-results').innerHTML =
           '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Installs</div><div style="font-size:22px;font-weight:700;color:#5DCAA5">' + installs.toLocaleString() + '</div></div>' +
@@ -552,6 +580,7 @@
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Pro converts</div><div style="font-size:22px;font-weight:700;color:#7F77DD">' + pro.toLocaleString() + '</div></div>' +
           '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Additional MRR</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + addMrr.toLocaleString() + '</div></div></div>';
+
         var roiEl = document.getElementById('calc-roi');
         if (spend > 0 && addMrr > 0) {
           var lifespan = parseInt(document.getElementById('calc-lifespan').value) || 14;
@@ -576,28 +605,30 @@
             '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">' +
             '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Lifetime revenue</div><div style="font-size:22px;font-weight:700;color:#22c55e">$' + totalLtv.toLocaleString() + '</div></div>' +
             '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Lifetime profit</div><div style="font-size:22px;font-weight:700;color:' + profitColor + '">' + (profit >= 0 ? '+' : '') + '$' + profit.toLocaleString() + '</div></div>' +
-            '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Return multiple</div><div style="font-size:22px;font-weight:700;color:' + profitColor + '">' + multiple + 'x</div></div>' +
-            '</div>' +
+            '<div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Return multiple</div><div style="font-size:22px;font-weight:700;color:' + profitColor + '">' + multiple + 'x</div></div></div>' +
             '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
             '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Breakeven</div><div style="font-size:16px;font-weight:700;color:' + beColor + '">' + months + ' mo</div></div>' +
             '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">ROI</div><div style="font-size:16px;font-weight:700;color:' + profitColor + '">' + (roiPct >= 0 ? '+' : '') + roiPct + '%</div></div>' +
             '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Cost/install</div><div style="font-size:16px;font-weight:700;color:#e4e4e7">$' + cpi + '</div></div>' +
-            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Cost/Pro user</div><div style="font-size:16px;font-weight:700;color:#e4e4e7">$' + (cpPro > 0 ? cpPro : 'n/a') + '</div></div>' +
-            '</div>' +
+            '<div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Cost/Pro user</div><div style="font-size:16px;font-weight:700;color:#e4e4e7">$' + (cpPro > 0 ? cpPro : 'n/a') + '</div></div></div>' +
             '<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:' + verdictColor + '15;border:1px solid ' + verdictColor + '30;display:flex;align-items:center;gap:8px">' +
             '<div style="font-size:14px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>' +
-            '<div style="font-size:12px;color:#a1a1aa">You spend $' + spend.toLocaleString() + ', get ' + pro + ' Pro users worth $' + ltvPerUser + ' each over ' + lifespan + ' months. Total lifetime value: $' + totalLtv.toLocaleString() + '. Breakeven in ' + months + ' month' + (months !== 1 ? 's' : '') + '.</div>' +
-            '</div></div>';
+            '<div style="font-size:12px;color:#a1a1aa">You spend $' + spend.toLocaleString() + ' on ' + ch.label + ', get ' + pro + ' Pro users worth $' + ltvPerUser + ' each over ' + lifespan + ' months. Total lifetime value: $' + totalLtv.toLocaleString() + '. Breakeven in ' + months + ' month' + (months !== 1 ? 's' : '') + '.</div></div></div>';
         } else if (spend > 0 && addMrr === 0) {
-          roiEl.innerHTML = '<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15)"><div style="font-size:14px;font-weight:700;color:#ef4444">Not worth it</div><div style="font-size:12px;color:#a1a1aa;margin-top:2px">At current Pro conversion rate (0%), this spend would generate $0 MRR. No return on investment. Focus on improving conversion before spending on ads.</div></div>';
+          roiEl.innerHTML = '<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15)"><div style="font-size:14px;font-weight:700;color:#ef4444">Not worth it</div><div style="font-size:12px;color:#a1a1aa;margin-top:2px">At current Pro conversion rate (0%), this spend would generate $0 MRR. Focus on improving conversion before spending on ads.</div></div>';
         } else { roiEl.innerHTML = ''; }
+
         var modeLabel = calcMode === 'target' ? 'target rates' : 'live data';
         var hasStars = calcMode === 'live' && (liveSignup === null || liveActivation === null || livePro === null);
-        document.getElementById('calc-rates').textContent = 'Rates (' + modeLabel + '): Install ' + labels[0] + ' > Sign-up ' + labels[1] + ' > Activation ' + labels[2] + ' > Pro ' + labels[3] + (hasStars ? '  (* = no live data, using target)' : '');
+        var channelPct = (ch.rate * 100);
+        var channelLabel = channelPct >= 1 ? channelPct + '%' : channelPct.toFixed(1) + '%';
+        document.getElementById('calc-rates').textContent = 'Rates: ' + ch.label + ' ' + channelLabel + ' imp-to-install > Sign-up ' + funnelLabels[0] + ' > Activation ' + funnelLabels[1] + ' > Pro ' + funnelLabels[2] + ' (funnel: ' + modeLabel + ')' + (hasStars ? '  (* = no live data, using target)' : '');
       }
+
       document.getElementById('calc-traffic').addEventListener('input', runCalc);
       document.getElementById('calc-spend').addEventListener('input', runCalc);
       document.getElementById('calc-lifespan').addEventListener('input', runCalc);
+      document.getElementById('calc-channel').addEventListener('change', runCalc);
       runCalc();
     }
 
