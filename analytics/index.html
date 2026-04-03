@@ -169,6 +169,22 @@
         </div>
       </div>
 
+      <div class="sect">
+        <div class="sect-title">Ghost user activity <span class="tip">?<span class="tt"><strong>What's happening with users who never signed in.</strong> These counts come from anonymous beacons that fire for ALL users (signed in or not). Compare "All users" vs "Signed-in only" to see how many ghost users are actively using SnipSnip without you knowing. If the gap is big, your sign-in prompt needs work. Available from v1.2.0+.</span></span></div>
+        <div class="card">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Snips (all users)</div><div style="font-size:22px;font-weight:700;color:#5DCAA5" id="gh-snips">--</div></div>
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Library opens</div><div style="font-size:22px;font-weight:700;color:#85B7EB" id="gh-library">--</div></div>
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Folders created</div><div style="font-size:22px;font-weight:700;color:#AFA9EC" id="gh-folders">--</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Signed-in snips</div><div style="font-size:18px;font-weight:700;color:#e4e4e7" id="gh-signed">--</div></div>
+            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Ghost-only snips <span class="tip">?<span class="tt">Snips taken by users who never signed in. These snips exist only on their local machine and never touch Supabase. If this number is high, people are finding value but not signing in.</span></span></div><div style="font-size:18px;font-weight:700;color:#f59e0b" id="gh-ghost">--</div></div>
+          </div>
+          <div style="font-size:11px;color:#3f3f46" id="gh-note">Requires v1.2.0+ extension</div>
+        </div>
+      </div>
+
       <div class="g2 sect">
         <div class="card">
           <div class="card-title">Viral loop <span class="tip">?<span class="tt"><strong>How your share pages drive new installs.</strong> Every shared snip is a free ad for SnipSnip. This section tracks how well those ads convert. "Had extension" = existing user saved it. "Sent to CWS" = new person redirected to Chrome Web Store. "Deep link saves" = someone installed via a share link and the snip was waiting for them.</span></span></div>
@@ -481,6 +497,17 @@
       document.getElementById('eng-active').textContent=eng.avg_snips_active;
       document.getElementById('eng-shares').textContent=eng.avg_shares;
       document.getElementById('eng-folders').textContent=eng.avg_folders;
+
+      // Ghost user activity
+      var gh = d.ghost || {};
+      document.getElementById('gh-snips').textContent = gh.total_snips || 0;
+      document.getElementById('gh-library').textContent = gh.library_opens || 0;
+      document.getElementById('gh-folders').textContent = gh.folders_created || 0;
+      document.getElementById('gh-signed').textContent = gh.signed_in_snips || 0;
+      document.getElementById('gh-ghost').textContent = gh.ghost_only_snips || 0;
+      if (gh.total_snips > 0) {
+        document.getElementById('gh-note').textContent = 'This week: ' + (gh.snips_week || 0) + ' snips, ' + (gh.library_opens_week || 0) + ' library opens';
+      }
 
       var pb=document.getElementById('power-body');pb.innerHTML='';
       (d.power_users||[]).forEach(function(u){pb.innerHTML+='<tr><td>'+u.email+'</td><td>'+u.snips+'</td><td><span class="pill pill-'+u.tier+'">'+u.tier+'</span></td><td>'+timeAgo(u.last_active)+'</td></tr>';});

@@ -196,6 +196,13 @@ module.exports = async (req, res) => {
     var marketValue = Math.max(5000, arrValuation);
     var bracket = arr >= 60000 ? '$60k+ ARR' : arr >= 12000 ? '$12k-$60k ARR' : arr < 1 ? 'pre-revenue' : 'under $12k ARR';
 
+    // Ghost user activity (anonymous events from unsigned-in users + signed-in users)
+    var ghostSnips = pvList.filter(function(p) { return p.page === 'snip_captured'; }).length;
+    var ghostLibrary = pvList.filter(function(p) { return p.page === 'library_opened'; }).length;
+    var ghostFolders = pvList.filter(function(p) { return p.page === 'folder_created'; }).length;
+    var ghostSnipsWeek = pvList.filter(function(p) { return p.page === 'snip_captured' && p.created_at >= d7; }).length;
+    var ghostLibraryWeek = pvList.filter(function(p) { return p.page === 'library_opened' && p.created_at >= d7; }).length;
+
     res.status(200).json({
       kpi: {
         total_users: totalUsers, wau: wau, mau: mau, dau: dau,
@@ -263,6 +270,15 @@ module.exports = async (req, res) => {
         multiple: multiple,
         bracket: bracket,
         mrr_used: mrr,
+      },
+      ghost: {
+        total_snips: ghostSnips,
+        snips_week: ghostSnipsWeek,
+        library_opens: ghostLibrary,
+        library_opens_week: ghostLibraryWeek,
+        folders_created: ghostFolders,
+        signed_in_snips: snipList.length,
+        ghost_only_snips: Math.max(0, ghostSnips - snipList.length),
       },
     });
   } catch (e) {
