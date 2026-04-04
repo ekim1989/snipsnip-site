@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       sb('snips?select=id&deleted=eq.false&created_at=gte.' + d7),
       sb('shared_links?select=id,user_id,created_at&source=eq.manual'),
       sb('shared_links?select=id&created_at=gte.' + d7 + '&source=eq.manual'),
-      sb('folders?select=id,user_id&deleted=eq.false'),
+      sb('folders?select=id,user_id,name&deleted=eq.false'),
       sb('page_views?select=*&order=created_at.desc&limit=1000'),
       sb('cta_clicks?select=*&order=created_at.desc&limit=1000'),
       sb('uninstall_feedback?select=*'),
@@ -57,6 +57,8 @@ module.exports = async (req, res) => {
     var shareList = safeArr(results[4]);
     var shareWeekList = safeArr(results[5]);
     var folderList = safeArr(results[6]);
+    var defaultFolderNames = ['Folder 1', 'Folder 2', 'Folder 3'];
+    var customFolderList = folderList.filter(function(f) { return defaultFolderNames.indexOf(f.name) === -1; });
     var pvList = safeArr(results[7]);
     var ctaList = safeArr(results[8]);
     var uninstallList = safeArr(results[9]);
@@ -100,7 +102,7 @@ module.exports = async (req, res) => {
     var saveDeepLink = shareSaves.filter(function(c) { return c.button_position === 'deep_link'; }).length;
 
     // Feature adoption
-    var usersWithFolders = new Set(folderList.map(function(f) { return f.user_id; })).size;
+    var usersWithFolders = new Set(customFolderList.map(function(f) { return f.user_id; })).size;
     var usersWhoShared = new Set(shareList.map(function(s) { return s.user_id; }).filter(Boolean)).size;
     var nudgeShown = nudgeList.filter(function(n) { return n.action === 'shown'; }).length;
     var nudgeClicked = nudgeList.filter(function(n) { return n.action === 'clicked'; }).length;
@@ -255,7 +257,7 @@ module.exports = async (req, res) => {
         avg_snips: totalUsers > 0 ? (snipList.length / totalUsers).toFixed(1) : '0',
         avg_snips_active: wau > 0 ? (snipWeekList.length / wau).toFixed(1) : '0',
         avg_shares: totalUsers > 0 ? (shareList.length / totalUsers).toFixed(1) : '0',
-        avg_folders: totalUsers > 0 ? (folderList.length / totalUsers).toFixed(1) : '0',
+        avg_folders: totalUsers > 0 ? (customFolderList.length / totalUsers).toFixed(1) : '0',
       },
       health: health,
       targets: {
