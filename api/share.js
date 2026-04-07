@@ -26,7 +26,7 @@ async function getOwnerTier(code) {
 
 module.exports = async (req, res) => {
   const code = req.query.c;
-  
+
   if (!code) {
     res.setHeader('Content-Type', 'text/html');
     return res.status(400).send(errorPage('Invalid link', 'This share link appears to be broken.'));
@@ -50,13 +50,17 @@ module.exports = async (req, res) => {
     let ogDesc = 'Someone shared web captures with you via SnipSnip.';
     let ogImage = '';
     let bodyContent = '';
+    let needsPoll = false;
 
     if (data.type === 'snip') {
       const s = data.snip;
-      ogTitle = s.title || s.hostname || 'Shared Snip';
-      ogDesc = s.ai_summary || (s.note && s.note !== '(no note)' ? s.note.slice(0, 160) : 'Snipped from ' + (s.hostname || 'the web'));
+      const isVideo = s.snip_type === 'video';
+      ogTitle = s.title || s.hostname || (isVideo ? 'Shared Video' : 'Shared Snip');
+      ogDesc = s.ai_summary || (s.note && s.note !== '(no note)' ? s.note.slice(0, 160) : (isVideo ? 'Video captured from ' : 'Snipped from ') + (s.hostname || 'the web'));
       ogImage = s.screenshot_url || '';
       bodyContent = renderSnip(s);
+      // If it's a video that hasn't finished uploading, the page will poll
+      if (isVideo && !s.video_url) needsPoll = true;
     } else if (data.type === 'folder') {
       ogTitle = data.folder_name || 'Shared Folder';
       ogDesc = data.snip_count + ' snip' + (data.snip_count !== 1 ? 's' : '') + ' in "' + esc(data.folder_name) + '"';
@@ -66,9 +70,10 @@ module.exports = async (req, res) => {
       bodyContent = renderFolder(data);
     }
 
-    const html = buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro);
+    const html = buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro, needsPoll);
     res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    // Don't cache while video is still processing — we want fresh data each request
+    res.setHeader('Cache-Control', needsPoll ? 'no-store' : 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).send(html);
 
   } catch (e) {
@@ -88,12 +93,42 @@ function formatDate(isoStr) {
   return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
 }
 
+function formatDuration(ms) {
+  if (!ms || ms < 0) return '';
+  var sec = Math.round(ms / 1000);
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
 function renderSnip(s) {
   var isNoNote = !s.note || s.note === '(no note)';
+  var isVideo = s.snip_type === 'video';
   var html = '<div class="ss">';
-  if (s.screenshot_url) {
+
+  if (isVideo) {
+    if (s.video_url) {
+      // Video is uploaded — render the player
+      html += '<video class="sv-vid" controls autoplay playsinline preload="metadata"';
+      if (s.screenshot_url) html += ' poster="' + esc(s.screenshot_url) + '"';
+      html += '><source src="' + esc(s.video_url) + '" type="video/webm">';
+      html += 'Your browser does not support video playback.</video>';
+    } else {
+      // Still uploading — show processing state. Client script will poll and reload.
+      html += '<div class="sv-proc">';
+      if (s.screenshot_url) {
+        html += '<img class="sv-proc-thumb" src="' + esc(s.screenshot_url) + '" alt="">';
+      }
+      html += '<div class="sv-proc-overlay">';
+      html += '<div class="sv-proc-spinner"></div>';
+      html += '<div class="sv-proc-text">Video is processing</div>';
+      html += '<div class="sv-proc-sub">This page will refresh automatically</div>';
+      html += '</div></div>';
+    }
+  } else if (s.screenshot_url) {
     html += '<img class="si" src="' + esc(s.screenshot_url) + '" alt="Screenshot" onclick="openLB(this.src)">';
   }
+
   if (!isNoNote) {
     html += '<div class="sno">' + esc(s.note) + '</div>';
   }
@@ -134,11 +169,24 @@ function renderCard(s) {
   var domain = s.hostname || 'unknown';
   var favicon = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32';
   var isNoNote = !s.note || s.note === '(no note)';
-  var html = '<div class="card"><div class="ciw"' + (s.screenshot_url ? ' onclick="openLB(\'' + esc(s.screenshot_url) + '\')"' : '') + '>';
+  var isVideo = s.snip_type === 'video';
+  var html = '<div class="card"><div class="ciw"';
+  if (isVideo && s.video_url) {
+    html += ' onclick="openVideoLB(\'' + esc(s.video_url) + '\')"';
+  } else if (s.screenshot_url) {
+    html += ' onclick="openLB(\'' + esc(s.screenshot_url) + '\')"';
+  }
+  html += '>';
   if (s.screenshot_url) {
     html += '<img class="ci" src="' + esc(s.screenshot_url) + '" alt="" loading="lazy">';
   } else {
     html += '<div class="ci" style="display:flex;align-items:center;justify-content:center;color:#3f3f46;font-size:13px">No screenshot</div>';
+  }
+  if (isVideo) {
+    html += '<div class="vp"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>';
+    if (s.duration_ms) {
+      html += '<div class="vd">' + formatDuration(s.duration_ms) + '</div>';
+    }
   }
   html += '</div><div class="cb"><div class="cn' + (isNoNote ? ' nn' : '') + '">' + esc(isNoNote ? '(no note)' : s.note) + '</div>';
   html += '<div class="cm"><div class="cs"><a href="' + esc(s.url || '#') + '" target="_blank" rel="noopener">';
@@ -148,10 +196,10 @@ function renderCard(s) {
 }
 
 function errorPage(title, text) {
-  return buildPage(title + ' — SnipSnip', text, '', '', '<div class="ep"><div class="ei">&#128279;</div><div class="et">' + esc(title) + '</div><div class="ex">' + esc(text) + '</div></div>', false);
+  return buildPage(title + ' — SnipSnip', text, '', '', '<div class="ep"><div class="ei">&#128279;</div><div class="et">' + esc(title) + '</div><div class="ex">' + esc(text) + '</div></div>', false, false);
 }
 
-function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
+function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro, needsPoll) {
   var refParam = code ? '?ref=' + esc(code) : '';
   var cwsUrl = 'https://chromewebstore.google.com/detail/snipsnip-%E2%80%94-instant-screen/knbeidebbhkhjfjchjknaolkdfjdnemc';
 
@@ -186,6 +234,16 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
       '</div>' +
     '</div>';
 
+  // Polling script for video processing state — refreshes the page when video lands
+  var pollScript = needsPoll ?
+    '(function(){var tries=0;var maxTries=40;var pollUrl="' + SUPABASE_URL + '/functions/v1/share-view?code=' + esc(code || '') + '";' +
+    'var poll=function(){tries++;if(tries>maxTries)return;' +
+    'fetch(pollUrl).then(function(r){return r.json()}).then(function(d){' +
+    'if(d&&d.snip&&d.snip.video_url){window.location.reload()}else{setTimeout(poll,3000)}' +
+    '}).catch(function(){setTimeout(poll,3000)})};' +
+    'setTimeout(poll,3000)})();'
+    : '';
+
   return '<!DOCTYPE html><html lang="en"><head>' +
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">' +
     '<title>' + esc(ogTitle) + ' — SnipSnip</title>' +
@@ -211,13 +269,25 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     '.gr{padding:24px 32px 40px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}' +
     '.card{background:#18181b;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;transition:transform .15s,box-shadow .15s}' +
     '.card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}' +
-    '.ciw{overflow:hidden;cursor:pointer}.ci{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#27272a}' +
+    '.ciw{position:relative;overflow:hidden;cursor:pointer}.ci{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#27272a}' +
+    '.vp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;pointer-events:none;backdrop-filter:blur(4px);transition:background .15s,transform .15s}' +
+    '.ciw:hover .vp{background:rgba(255,77,77,.85);transform:translate(-50%,-50%) scale(1.08)}' +
+    '.vp svg{width:22px;height:22px;margin-left:3px}' +
+    '.vd{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.75);color:#fff;font-size:11px;font-weight:600;padding:3px 7px;border-radius:4px;font-variant-numeric:tabular-nums;backdrop-filter:blur(4px);pointer-events:none}' +
     '.cb{padding:14px 16px}.cn{font-size:14px;color:#d4d4d8;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}' +
     '.cn.nn{color:#3f3f46;font-style:italic}' +
     '.cm{display:flex;align-items:center;font-size:11px;color:#52525b}.cs{display:flex;align-items:center;gap:6px;overflow:hidden}' +
     '.cs a{color:#52525b;text-decoration:none;display:flex;align-items:center;gap:6px;overflow:hidden}.cs a:hover{color:#a1a1aa}' +
     '.cf{width:14px;height:14px;border-radius:3px;flex-shrink:0}.cd{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
     '.ss{max-width:800px;margin:0 auto;padding:32px}.si{width:100%;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.4);margin-bottom:24px;background:#27272a;cursor:zoom-in}' +
+    '.sv-vid{width:100%;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.4);margin-bottom:24px;background:#000;display:block}' +
+    '.sv-proc{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#27272a;margin-bottom:24px;aspect-ratio:16/10;box-shadow:0 12px 40px rgba(0,0,0,.4)}' +
+    '.sv-proc-thumb{width:100%;height:100%;object-fit:cover;display:block;filter:blur(8px) brightness(.5)}' +
+    '.sv-proc-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px}' +
+    '.sv-proc-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#ff4d4d;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}' +
+    '@keyframes spin{to{transform:rotate(360deg)}}' +
+    '.sv-proc-text{font-size:16px;font-weight:600;margin-bottom:4px}' +
+    '.sv-proc-sub{font-size:13px;color:#a1a1aa}' +
     '.sno{font-size:18px;color:#d4d4d8;line-height:1.6;margin-bottom:16px}' +
     '.sr{display:flex;align-items:center;gap:8px;font-size:14px;color:#52525b}.sr a{color:#52525b;text-decoration:none}.sr a:hover{color:#a1a1aa;text-decoration:underline}' +
     '.ai{margin-top:16px;padding:16px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.05)}' +
@@ -238,6 +308,7 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     '.bc-note{margin-top:12px;font-size:12px;color:#3f3f46}' +
     '.lb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);cursor:zoom-out}' +
     '.lb img{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default}' +
+    '.lb video{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000}' +
     '.lc{position:absolute;top:20px;right:24px;background:none;border:none;color:#71717a;font-size:28px;cursor:pointer;padding:8px;line-height:1}.lc:hover{color:#fff}' +
     '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}.sv{margin:0 16px}}' +
     '</style></head><body>' +
@@ -248,6 +319,7 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
     '<script>' +
     'navigator.sendBeacon("/api/view",new Blob([JSON.stringify({page:"share",referrer:document.referrer||null})],{type:"application/json"}));' +
     'function openLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var i=document.createElement("img");i.src=s;i.onclick=function(e){e.stopPropagation()};l.appendChild(i);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}' +
+    'function openVideoLB(s){if(!s)return;var l=document.createElement("div");l.className="lb";l.onclick=function(e){if(e.target===l)l.remove()};var c=document.createElement("button");c.className="lc";c.innerHTML="&times;";c.onclick=function(){l.remove()};l.appendChild(c);var v=document.createElement("video");v.src=s;v.controls=true;v.autoplay=true;v.playsInline=true;v.onclick=function(e){e.stopPropagation()};l.appendChild(v);document.body.appendChild(l);document.addEventListener("keydown",function h(e){if(e.key==="Escape"){l.remove();document.removeEventListener("keydown",h)}})}' +
     'var saveBtn=document.getElementById("saveSnipBtn");' +
     'if(saveBtn){saveBtn.onclick=function(){' +
       'var hasExt=document.documentElement.dataset.snipsnip==="installed";' +
@@ -262,6 +334,7 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro) {
         'window.open("' + cwsUrl + '","_blank");' +
       '}' +
     '}}' +
+    pollScript +
     '</script>' +
     '</body></html>';
 }
