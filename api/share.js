@@ -34,14 +34,24 @@ module.exports = async (req, res) => {
 
   try {
     const apiUrl = 'https://ghstrzodoyxokligldqn.supabase.co/functions/v1/share-view?code=' + encodeURIComponent(code);
-    const [response, ownerTier] = await Promise.all([
-      fetch(apiUrl),
-      getOwnerTier(code),
-    ]);
-    const data = await response.json();
+
+    // Retry up to 3 times if the share link returns "not found" — covers the
+    // race window where a user clicks their freshly-copied video link before
+    // the shared_links row has been inserted (~1-2 seconds typical).
+    let data = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const response = await fetch(apiUrl);
+      data = await response.json();
+      if (!data || !data.error) break;
+      // Only retry on "not found" — other errors (auth, server) we surface immediately
+      if (data.error && data.error.toLowerCase().indexOf('not found') === -1) break;
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+    }
+
+    const ownerTier = await getOwnerTier(code);
     const isPro = ownerTier === 'pro';
 
-    if (data.error) {
+    if (data && data.error) {
       res.setHeader('Content-Type', 'text/html');
       return res.status(404).send(errorPage('Not found', data.error));
     }
