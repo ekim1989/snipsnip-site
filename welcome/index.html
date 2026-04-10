@@ -14,16 +14,87 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     img {
       width: 100vw;
       height: 100vh;
       object-fit: cover;
     }
+
+    /* Keyboard shortcut hint — sits below the image's "Create your first Snip" line */
+    .ss-shortcut-hint {
+      position: fixed;
+      top: 70%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      animation: ssFadeUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards;
+    }
+    .ss-shortcut-text {
+      font-size: 17px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.92);
+      letter-spacing: -0.01em;
+    }
+    .ss-kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-bottom-width: 2px;
+      border-radius: 7px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Mono", Menlo, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.08) inset,
+        0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    @keyframes ssFadeUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 12px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    /* Mobile / narrow viewport — scale down so it doesn't overflow */
+    @media (max-width: 600px) {
+      .ss-shortcut-hint { top: 72%; gap: 8px; }
+      .ss-shortcut-text { font-size: 14px; }
+      .ss-kbd {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
   <img src="/welcome/welcome-bg.png" alt="Welcome to SnipSnip">
+
+  <div class="ss-shortcut-hint" aria-hidden="true">
+    <span class="ss-shortcut-text">Even faster — press</span>
+    <kbd class="ss-kbd ss-kbd-mod">⌥</kbd>
+    <kbd class="ss-kbd">S</kbd>
+  </div>
+
   <script>
     navigator.sendBeacon('/api/view', new Blob(
       [JSON.stringify({ page: 'welcome', referrer: document.referrer || null })],
@@ -36,6 +107,18 @@
       if (pendingCode) {
         document.documentElement.dataset.pendingSave = pendingCode;
         localStorage.removeItem('ss_pending_save');
+      }
+    } catch(e) {}
+
+    // Show the right modifier key for the user's platform.
+    // Mac users see ⌥ (Option). Windows/Linux users see Alt.
+    try {
+      var ua = navigator.userAgent || '';
+      var plat = navigator.platform || '';
+      var isMac = /Mac|iPhone|iPad|iPod/.test(plat) || /Mac OS X/.test(ua);
+      if (!isMac) {
+        var modKey = document.querySelector('.ss-kbd-mod');
+        if (modKey) modKey.textContent = 'Alt';
       }
     } catch(e) {}
   </script>
