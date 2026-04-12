@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
       sbAdmin('/auth/v1/admin/users?per_page=500'),
       sb('profiles?select=*'),
       sb('snips?select=id,user_id,created_at,folder_id&deleted=eq.false'),
-      sb('snips?select=id&deleted=eq.false&created_at=gte.' + d7),
+      sb('snips?select=id,user_id&deleted=eq.false&created_at=gte.' + d7),
       sb('shared_links?select=id,user_id,created_at&source=eq.manual'),
       sb('shared_links?select=id&created_at=gte.' + d7 + '&source=eq.manual'),
       sb('folders?select=id,user_id,name&deleted=eq.false'),
@@ -51,6 +51,9 @@ module.exports = async (req, res) => {
     ]);
 
     var userList = safeArr(results[0].users || results[0]);
+    var googleUsers = userList.filter(function(u) { return !u.is_anonymous; });
+    var anonUsers = userList.filter(function(u) { return u.is_anonymous; });
+    var anonUserIds = new Set(anonUsers.map(function(u) { return u.id; }));
     var profileList = safeArr(results[1]);
     var snipList = safeArr(results[2]);
     var snipWeekList = safeArr(results[3]);
@@ -66,8 +69,15 @@ module.exports = async (req, res) => {
     var subList = safeArr(results[11]);
     var keyList = safeArr(results[12]);
 
-    var totalUsers = userList.length;
-    var usersThisWeek = userList.filter(function(u) { return u.created_at && u.created_at >= d7; }).length;
+    var totalUsers = googleUsers.length;
+    var totalAnon = anonUsers.length;
+    var usersThisWeek = googleUsers.filter(function(u) { return u.created_at && u.created_at >= d7; }).length;
+
+    // Snips broken down by user type (anon vs Google)
+    var googleSnips = snipList.filter(function(s) { return !anonUserIds.has(s.user_id); });
+    var anonSnips = snipList.filter(function(s) { return anonUserIds.has(s.user_id); });
+    var googleSnipsWeek = snipWeekList.filter(function(s) { return !anonUserIds.has(s.user_id); });
+    var anonSnipsWeek = snipWeekList.filter(function(s) { return anonUserIds.has(s.user_id); });
     var activeSubs = subList.filter(function(s) { return s.status === 'active'; });
     var proUsers = activeSubs.length;
     var mrr = proUsers * 8;
@@ -86,14 +96,15 @@ module.exports = async (req, res) => {
 
     var dailySnips = dailyDates.map(function(d) { return snipList.filter(function(s) { return dateStr(s.created_at) === d; }).length; });
     var dailyShares = dailyDates.map(function(d) { return shareList.filter(function(s) { return dateStr(s.created_at) === d; }).length; });
-    var dailyUsers = dailyDates.map(function(d) { return userList.filter(function(u) { return dateStr(u.created_at) === d; }).length; });
+    var dailyUsers = dailyDates.map(function(d) { return googleUsers.filter(function(u) { return dateStr(u.created_at) === d; }).length; });
 
     // Funnel
     var pvLanding = pvList.filter(function(p) { return p.page === 'landing'; }).length;
     var pvWelcome = pvList.filter(function(p) { return p.page === 'welcome'; }).length;
     var pvShare = pvList.filter(function(p) { return p.page === 'share'; }).length;
     var ctaCws = ctaList.filter(function(c) { return c.page !== 'share_save'; }).length;
-    var usersWithSnips = new Set(snipList.map(function(s) { return s.user_id; })).size;
+    var usersWithSnips = new Set(googleSnips.map(function(s) { return s.user_id; })).size;
+    var anonsWithSnips = new Set(anonSnips.map(function(s) { return s.user_id; })).size;
 
     // Share page performance
     var shareSaves = ctaList.filter(function(c) { return c.page === 'share_save'; });
@@ -102,8 +113,8 @@ module.exports = async (req, res) => {
     var saveDeepLink = shareSaves.filter(function(c) { return c.button_position === 'deep_link'; }).length;
 
     // Feature adoption
-    var usersWithFolders = new Set(customFolderList.map(function(f) { return f.user_id; })).size;
-    var usersWhoShared = new Set(shareList.map(function(s) { return s.user_id; }).filter(Boolean)).size;
+    var usersWithFolders = new Set(customFolderList.map(function(f) { return f.user_id; }).filter(function(id) { return !anonUserIds.has(id); })).size;
+    var usersWhoShared = new Set(shareList.map(function(s) { return s.user_id; }).filter(function(id) { return id && !anonUserIds.has(id); })).size;
     var nudgeShown = nudgeList.filter(function(n) { return n.action === 'shown'; }).length;
     var nudgeClicked = nudgeList.filter(function(n) { return n.action === 'clicked'; }).length;
 
@@ -113,7 +124,7 @@ module.exports = async (req, res) => {
 
     // Retention (corrected: 21d at risk, 45d churned)
     var d1Ret = 0, d7Ret = 0, d30Ret = 0, totalD1 = 0, totalD7 = 0, totalD30 = 0;
-    userList.forEach(function(u) {
+    googleUsers.forEach(function(u) {
       if (!u.created_at) return;
       var created = new Date(u.created_at);
       var prof = profileList.find(function(p) { return p.id === u.id; });
@@ -126,13 +137,16 @@ module.exports = async (req, res) => {
       if (daysSinceCreated >= 30) { totalD30++; if (daysBetween >= 30) d30Ret++; }
     });
 
-    // At risk = 21-45 days inactive. Churned = 45+ days inactive
+    // At risk = 21-45 days inactive. Churned = 45+ days inactive (Google users only)
+    var googleUserIds = new Set(googleUsers.map(function(u) { return u.id; }));
     var atRisk = profileList.filter(function(p) {
       if (!p.last_active_at) return false;
+      if (!googleUserIds.has(p.id)) return false;
       return p.last_active_at < d21 && p.last_active_at >= d45;
     }).length;
     var churned = profileList.filter(function(p) {
       if (!p.last_active_at) return false;
+      if (!googleUserIds.has(p.id)) return false;
       return p.last_active_at < d45;
     }).length;
 
@@ -140,8 +154,8 @@ module.exports = async (req, res) => {
     var userSnipCounts = {};
     snipList.forEach(function(s) { userSnipCounts[s.user_id] = (userSnipCounts[s.user_id] || 0) + 1; });
 
-    // User table
-    var userTable = userList.map(function(u) {
+    // User table (Google users only - the people you can identify and reach)
+    var userTable = googleUsers.map(function(u) {
       var prof = profileList.find(function(p) { return p.id === u.id; });
       var snipCount = userSnipCounts[u.id] || 0;
       return {
@@ -198,12 +212,10 @@ module.exports = async (req, res) => {
     var marketValue = Math.max(5000, arrValuation);
     var bracket = arr >= 60000 ? '$60k+ ARR' : arr >= 12000 ? '$12k-$60k ARR' : arr < 1 ? 'pre-revenue' : 'under $12k ARR';
 
-    // Ghost user activity (anonymous events from unsigned-in users + signed-in users)
-    var ghostSnips = pvList.filter(function(p) { return p.page === 'snip_captured'; }).length;
-    var ghostLibrary = pvList.filter(function(p) { return p.page === 'library_opened'; }).length;
-    var ghostFolders = pvList.filter(function(p) { return p.page === 'folder_created'; }).length;
-    var ghostSnipsWeek = pvList.filter(function(p) { return p.page === 'snip_captured' && p.created_at >= d7; }).length;
-    var ghostLibraryWeek = pvList.filter(function(p) { return p.page === 'library_opened' && p.created_at >= d7; }).length;
+    // Anonymous user activity (from real snips table, not dead beacons)
+    var activeAnons = profileList.filter(function(p) {
+      return anonUserIds.has(p.id) && p.last_active_at && p.last_active_at >= d7;
+    }).length;
 
     res.status(200).json({
       kpi: {
@@ -274,13 +286,12 @@ module.exports = async (req, res) => {
         mrr_used: mrr,
       },
       ghost: {
-        total_snips: ghostSnips,
-        snips_week: ghostSnipsWeek,
-        library_opens: ghostLibrary,
-        library_opens_week: ghostLibraryWeek,
-        folders_created: ghostFolders,
-        signed_in_snips: snipList.length,
-        ghost_only_snips: Math.max(0, ghostSnips - snipList.length),
+        total_anon: totalAnon,
+        active_anons: activeAnons,
+        anon_snips: anonSnips.length,
+        anon_snips_week: anonSnipsWeek.length,
+        anons_with_snips: anonsWithSnips,
+        google_snips: googleSnips.length,
       },
     });
   } catch (e) {

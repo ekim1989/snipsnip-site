@@ -170,18 +170,18 @@
       </div>
 
       <div class="sect">
-        <div class="sect-title">Ghost user activity <span class="tip">?<span class="tt"><strong>What's happening with users who never signed in.</strong> These counts come from anonymous beacons that fire for ALL users (signed in or not). Compare "All users" vs "Signed-in only" to see how many ghost users are actively using SnipSnip without you knowing. If the gap is big, your sign-in prompt needs work. Available from v1.2.0+.</span></span></div>
+        <div class="sect-title">Anonymous user activity <span class="tip">?<span class="tt"><strong>People using SnipSnip without signing in.</strong> Every install creates an anonymous Supabase session. These users can take snips, create folders, and share links without ever signing in. This card shows how many are getting value silently. If "anon snips" is high but "Google snips" is low, your sign-in prompt needs work.</span></span></div>
         <div class="card">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
-            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Snips (all users)</div><div style="font-size:22px;font-weight:700;color:#5DCAA5" id="gh-snips">--</div></div>
-            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Library opens</div><div style="font-size:22px;font-weight:700;color:#85B7EB" id="gh-library">--</div></div>
-            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Folders created</div><div style="font-size:22px;font-weight:700;color:#AFA9EC" id="gh-folders">--</div></div>
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Anonymous users</div><div style="font-size:22px;font-weight:700;color:#5DCAA5" id="gh-snips">--</div></div>
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Active anons (7d)</div><div style="font-size:22px;font-weight:700;color:#85B7EB" id="gh-library">--</div></div>
+            <div style="text-align:center;padding:14px 8px;border-radius:8px;background:#27272a"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Anons who snipped</div><div style="font-size:22px;font-weight:700;color:#AFA9EC" id="gh-folders">--</div></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Signed-in snips</div><div style="font-size:18px;font-weight:700;color:#e4e4e7" id="gh-signed">--</div></div>
-            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Ghost-only snips <span class="tip">?<span class="tt">Snips taken by users who never signed in. These snips exist only on their local machine and never touch Supabase. If this number is high, people are finding value but not signing in.</span></span></div><div style="font-size:18px;font-weight:700;color:#f59e0b" id="gh-ghost">--</div></div>
+            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Snips by Google users</div><div style="font-size:18px;font-weight:700;color:#e4e4e7" id="gh-signed">--</div></div>
+            <div style="text-align:center;padding:12px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:11px;color:#71717a;margin-bottom:4px">Snips by anon users <span class="tip">?<span class="tt">Snips taken by people who never signed in. These count toward your total snips but not toward identifiable user metrics. If this number is high, you have engaged users who haven't committed yet.</span></span></div><div style="font-size:18px;font-weight:700;color:#f59e0b" id="gh-ghost">--</div></div>
           </div>
-          <div style="font-size:11px;color:#3f3f46" id="gh-note">Requires v1.2.0+ extension</div>
+          <div style="font-size:11px;color:#3f3f46" id="gh-note">Live data from anonymous Supabase sessions</div>
         </div>
       </div>
 
@@ -500,11 +500,11 @@
 
       // Ghost user activity
       var gh = d.ghost || {};
-      document.getElementById('gh-snips').textContent = gh.total_snips || 0;
-      document.getElementById('gh-library').textContent = gh.library_opens || 0;
-      document.getElementById('gh-folders').textContent = gh.folders_created || 0;
-      document.getElementById('gh-signed').textContent = gh.signed_in_snips || 0;
-      document.getElementById('gh-ghost').textContent = gh.ghost_only_snips || 0;
+      document.getElementById('gh-snips').textContent = gh.total_anon || 0;
+      document.getElementById('gh-library').textContent = gh.active_anons || 0;
+      document.getElementById('gh-folders').textContent = gh.anons_with_snips || 0;
+      document.getElementById('gh-signed').textContent = gh.google_snips || 0;
+      document.getElementById('gh-ghost').textContent = gh.anon_snips || 0;
       if (gh.total_snips > 0) {
         document.getElementById('gh-note').textContent = 'This week: ' + (gh.snips_week || 0) + ' snips, ' + (gh.library_opens_week || 0) + ' library opens';
       }
