@@ -65,12 +65,38 @@ module.exports = async (req, res) => {
     if (data.type === 'snip') {
       const s = data.snip;
       const isVideo = s.snip_type === 'video';
-      ogTitle = s.title || s.hostname || (isVideo ? 'Shared Video' : 'Shared Snip');
-      ogDesc = s.ai_summary || (s.note && s.note !== '(no note)' ? s.note.slice(0, 160) : (isVideo ? 'Video captured from ' : 'Snipped from ') + (s.hostname || 'the web'));
-      ogImage = s.screenshot_url || '';
-      bodyContent = renderSnip(s);
-      // If it's a video that hasn't finished uploading, the page will poll
-      if (isVideo && !s.video_url) needsPoll = true;
+      const isYoutube = s.snip_type === 'youtube';
+
+      if (isYoutube) {
+        const ytThumb = s.youtube_video_id
+          ? 'https://img.youtube.com/vi/' + s.youtube_video_id + '/maxresdefault.jpg'
+          : '';
+        ogTitle = s.title || 'Shared YouTube breakdown';
+        // Use first 200 chars of report when ready, else a generic fallback
+        if (s.report && s.report.trim().length > 0) {
+          // Strip markdown chars for description
+          ogDesc = s.report
+            .replace(/[#*`>_~\[\]]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 200);
+        } else {
+          ogDesc = 'AI-generated breakdown of a YouTube video, captured with SnipSnip.';
+        }
+        ogImage = ytThumb;
+        bodyContent = renderYoutube(s);
+        // Poll if the report is still being generated
+        if (s.ai_status === 'pending' || s.ai_status === 'processing') {
+          needsPoll = true;
+        }
+      } else {
+        ogTitle = s.title || s.hostname || (isVideo ? 'Shared Video' : 'Shared Snip');
+        ogDesc = s.ai_summary || (s.note && s.note !== '(no note)' ? s.note.slice(0, 160) : (isVideo ? 'Video captured from ' : 'Snipped from ') + (s.hostname || 'the web'));
+        ogImage = s.screenshot_url || '';
+        bodyContent = renderSnip(s);
+        // If it's a video that hasn't finished uploading, the page will poll
+        if (isVideo && !s.video_url) needsPoll = true;
+      }
     } else if (data.type === 'folder') {
       ogTitle = data.folder_name || 'Shared Folder';
       ogDesc = data.snip_count + ' snip' + (data.snip_count !== 1 ? 's' : '') + ' in "' + esc(data.folder_name) + '"';
@@ -109,6 +135,145 @@ function formatDuration(ms) {
   var m = Math.floor(sec / 60);
   var s = sec % 60;
   return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// Minimal, safe markdown to HTML converter for AI-generated reports.
+// Escapes all input first, then translates a small whitelist of patterns:
+// h1/h2/h3 headings, bold, italics, inline code, bullet lists, numbered lists,
+// blockquotes, paragraphs. No raw HTML passes through.
+function renderMarkdown(md) {
+  if (!md) return '';
+  // Normalize line endings, escape, then translate
+  var src = String(md).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  var lines = src.split('\n');
+  var html = '';
+  var i = 0;
+  function escLine(t) { return esc(t); }
+  function inline(t) {
+    // Order matters: code first (literal), then bold, then italic, then links
+    t = escLine(t);
+    t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    t = t.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+    t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function(_, label, url) {
+      // Only allow http/https/mailto URLs; otherwise drop the link
+      if (!/^(https?:|mailto:)/i.test(url)) return label;
+      return '<a href="' + escLine(url) + '" target="_blank" rel="noopener">' + label + '</a>';
+    });
+    return t;
+  }
+  while (i < lines.length) {
+    var line = lines[i];
+    var trimmed = line.trim();
+    if (trimmed === '') { i++; continue; }
+    // Headings
+    var hMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    if (hMatch) {
+      var level = hMatch[1].length;
+      html += '<h' + level + ' class="rh' + level + '">' + inline(hMatch[2]) + '</h' + level + '>';
+      i++;
+      continue;
+    }
+    // Blockquote
+    if (trimmed.startsWith('> ')) {
+      var bq = '';
+      while (i < lines.length && lines[i].trim().startsWith('> ')) {
+        bq += inline(lines[i].trim().slice(2)) + ' ';
+        i++;
+      }
+      html += '<blockquote class="rb">' + bq.trim() + '</blockquote>';
+      continue;
+    }
+    // Bullet list
+    if (/^[-*]\s+/.test(trimmed)) {
+      html += '<ul class="rl">';
+      while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
+        var li = lines[i].trim().replace(/^[-*]\s+/, '');
+        html += '<li>' + inline(li) + '</li>';
+        i++;
+      }
+      html += '</ul>';
+      continue;
+    }
+    // Numbered list
+    if (/^\d+\.\s+/.test(trimmed)) {
+      html += '<ol class="rl">';
+      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+        var noli = lines[i].trim().replace(/^\d+\.\s+/, '');
+        html += '<li>' + inline(noli) + '</li>';
+        i++;
+      }
+      html += '</ol>';
+      continue;
+    }
+    // Paragraph: gather contiguous non-empty, non-special lines
+    var para = '';
+    while (
+      i < lines.length &&
+      lines[i].trim() !== '' &&
+      !/^(#{1,3})\s+/.test(lines[i].trim()) &&
+      !lines[i].trim().startsWith('> ') &&
+      !/^[-*]\s+/.test(lines[i].trim()) &&
+      !/^\d+\.\s+/.test(lines[i].trim())
+    ) {
+      para += (para ? ' ' : '') + lines[i].trim();
+      i++;
+    }
+    if (para) html += '<p class="rp">' + inline(para) + '</p>';
+  }
+  return html;
+}
+
+function renderYoutube(s) {
+  var thumb = s.youtube_video_id
+    ? 'https://img.youtube.com/vi/' + s.youtube_video_id + '/maxresdefault.jpg'
+    : '';
+  var watchUrl = s.youtube_url || (s.youtube_video_id
+    ? 'https://www.youtube.com/watch?v=' + s.youtube_video_id
+    : '#');
+  var title = s.title || 'YouTube video';
+
+  var html = '<div class="ss yt">';
+
+  // Hero: thumbnail with play overlay, links to YouTube
+  html += '<a class="yt-hero" href="' + esc(watchUrl) + '" target="_blank" rel="noopener" aria-label="Watch on YouTube">';
+  if (thumb) {
+    html += '<img class="yt-thumb" src="' + esc(thumb) + '" alt="" onerror="this.onerror=null;this.src=\'https://img.youtube.com/vi/' + esc(s.youtube_video_id || '') + '/hqdefault.jpg\'">';
+  } else {
+    html += '<div class="yt-thumb yt-thumb-empty"></div>';
+  }
+  html += '<div class="yt-play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>';
+  html += '</a>';
+
+  // Title + watch link
+  html += '<h1 class="yt-title">' + esc(title) + '</h1>';
+  html += '<a class="yt-watch" href="' + esc(watchUrl) + '" target="_blank" rel="noopener">';
+  html += '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M21.6 7.2c-.2-.9-.9-1.6-1.8-1.8C18 5 12 5 12 5s-6 0-7.8.4c-.9.2-1.6.9-1.8 1.8C2 9 2 12 2 12s0 3 .4 4.8c.2.9.9 1.6 1.8 1.8C6 19 12 19 12 19s6 0 7.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.8.4-4.8.4-4.8s0-3-.4-4.8zM10 15V9l5 3-5 3z"/></svg>';
+  html += 'Watch on YouTube</a>';
+
+  // Report body
+  html += '<div class="yt-report">';
+  html += '<div class="yt-report-label">AI breakdown</div>';
+  if (s.ai_status === 'report_ready' || s.ai_status === 'lens_applied') {
+    if (s.report && s.report.trim().length > 0) {
+      html += '<div class="yt-report-body">' + renderMarkdown(s.report) + '</div>';
+    } else {
+      html += '<div class="yt-report-empty">Report unavailable for this video.</div>';
+    }
+  } else if (s.ai_status === 'pending' || s.ai_status === 'processing') {
+    html += '<div class="yt-report-proc">';
+    html += '<div class="sv-proc-spinner"></div>';
+    html += '<div class="yt-proc-text">Generating breakdown</div>';
+    html += '<div class="yt-proc-sub">This usually takes under a minute. The page will refresh automatically.</div>';
+    html += '</div>';
+  } else {
+    // failed, unknown, or null
+    html += '<div class="yt-report-empty">A breakdown isn\u2019t available for this video.</div>';
+  }
+  html += '</div>'; // /yt-report
+
+  html += '</div>'; // /ss
+  return html;
 }
 
 function renderSnip(s) {
@@ -244,12 +409,16 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro, needsPoll
       '</div>' +
     '</div>';
 
-  // Polling script for video processing state — refreshes the page when video lands
+  // Polling script:
+  //   - Video snips: refresh when video_url lands
+  //   - YouTube snips: refresh when ai_status flips to ready
   var pollScript = needsPoll ?
     '(function(){var tries=0;var maxTries=40;var pollUrl="' + SUPABASE_URL + '/functions/v1/share-view?code=' + esc(code || '') + '";' +
     'var poll=function(){tries++;if(tries>maxTries)return;' +
     'fetch(pollUrl).then(function(r){return r.json()}).then(function(d){' +
-    'if(d&&d.snip&&d.snip.video_url){window.location.reload()}else{setTimeout(poll,3000)}' +
+    'var s=d&&d.snip;' +
+    'var ready=s&&(s.video_url||s.ai_status==="report_ready"||s.ai_status==="lens_applied");' +
+    'if(ready){window.location.reload()}else{setTimeout(poll,3000)}' +
     '}).catch(function(){setTimeout(poll,3000)})};' +
     'setTimeout(poll,3000)})();'
     : '';
@@ -320,7 +489,40 @@ function buildPage(ogTitle, ogDesc, ogImage, code, bodyContent, isPro, needsPoll
     '.lb img{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default}' +
     '.lb video{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000}' +
     '.lc{position:absolute;top:20px;right:24px;background:none;border:none;color:#71717a;font-size:28px;cursor:pointer;padding:8px;line-height:1}.lc:hover{color:#fff}' +
-    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}.sv{margin:0 16px}}' +
+    '@media(max-width:640px){.bt{display:none}.sh{padding:24px 16px 0}.sn{font-size:22px}.gr{padding:16px 16px 40px;grid-template-columns:1fr}.ss{padding:16px}.sv{margin:0 16px}.yt-title{font-size:22px}.yt-report{padding:18px}}' +
+    // YouTube share-page styles
+    '.ss.yt{max-width:760px}' +
+    '.yt-hero{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.4);margin-bottom:20px;cursor:pointer}' +
+    '.yt-thumb{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s,filter .2s}' +
+    '.yt-thumb-empty{background:linear-gradient(135deg,#27272a,#18181b)}' +
+    '.yt-hero:hover .yt-thumb{transform:scale(1.02);filter:brightness(.85)}' +
+    '.yt-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72px;height:72px;border-radius:50%;background:rgba(255,77,77,.92);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:transform .2s,background .2s}' +
+    '.yt-hero:hover .yt-play{transform:translate(-50%,-50%) scale(1.08);background:#ff4d4d}' +
+    '.yt-play svg{width:30px;height:30px;margin-left:4px}' +
+    '.yt-title{font-size:26px;font-weight:700;line-height:1.3;letter-spacing:-.3px;margin-bottom:10px;color:#f4f4f5}' +
+    '.yt-watch{display:inline-flex;align-items:center;font-size:13px;color:#a1a1aa;text-decoration:none;margin-bottom:24px;padding:6px 12px;border:1px solid rgba(255,255,255,.08);border-radius:8px;transition:.15s}' +
+    '.yt-watch:hover{color:#fff;border-color:rgba(255,77,77,.4);background:rgba(255,77,77,.06)}' +
+    '.yt-report{margin-top:8px;padding:24px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px}' +
+    '.yt-report-label{font-size:11px;color:#52525b;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px}' +
+    '.yt-report-label::before{content:"";width:6px;height:6px;border-radius:50%;background:#ff4d4d;display:inline-block}' +
+    '.yt-report-body{color:#d4d4d8;font-size:15px;line-height:1.7}' +
+    '.yt-report-body .rh1{font-size:22px;font-weight:700;color:#f4f4f5;margin:24px 0 10px;letter-spacing:-.2px}' +
+    '.yt-report-body .rh2{font-size:18px;font-weight:700;color:#f4f4f5;margin:22px 0 8px;letter-spacing:-.2px}' +
+    '.yt-report-body .rh3{font-size:15px;font-weight:600;color:#e4e4e7;margin:18px 0 6px}' +
+    '.yt-report-body .rh1:first-child,.yt-report-body .rh2:first-child,.yt-report-body .rh3:first-child{margin-top:0}' +
+    '.yt-report-body .rp{margin:10px 0}' +
+    '.yt-report-body .rl{margin:10px 0;padding-left:22px}' +
+    '.yt-report-body .rl li{margin:6px 0}' +
+    '.yt-report-body .rb{margin:14px 0;padding:10px 14px;border-left:3px solid #ff4d4d;background:rgba(255,77,77,.05);color:#a1a1aa;font-style:italic;border-radius:0 6px 6px 0}' +
+    '.yt-report-body code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;color:#e4e4e7}' +
+    '.yt-report-body strong{color:#f4f4f5;font-weight:600}' +
+    '.yt-report-body a{color:#ff8585;text-decoration:underline;text-underline-offset:2px}' +
+    '.yt-report-body a:hover{color:#ff4d4d}' +
+    '.yt-report-empty{font-size:14px;color:#71717a;font-style:italic}' +
+    '.yt-report-proc{display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 16px}' +
+    '.yt-report-proc .sv-proc-spinner{margin-bottom:14px}' +
+    '.yt-proc-text{font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:4px}' +
+    '.yt-proc-sub{font-size:13px;color:#71717a;max-width:340px;line-height:1.5}' +
     '</style></head><body>' +
     topBar +
     bodyContent +
